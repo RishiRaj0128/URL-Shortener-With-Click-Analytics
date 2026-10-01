@@ -1,0 +1,151 @@
+spring:
+  application:
+    name: url-shortener-service
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:url_shortener}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 10000
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    timeout: 2000
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2000
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 3600000  # 1 hour default TTL (milliseconds)
+
+  security:
+    user:
+      name: admin
+      password: admin
+
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /
+  compression:
+    enabled: true
+    min-response-size: 1024
+
+logging:
+  level:
+    root: INFO
+    com.urlshortener: DEBUG
+    org.springframework.security: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+# Application-specific properties
+app:
+  base-url: ${APP_BASE_URL:http://localhost:8080}
+  jwt:
+    secret: ${JWT_SECRET:your-secret-key-change-in-production}
+    expiration: 86400000  # 24 hours in milliseconds
+  
+  snowflake:
+    worker-id: ${WORKER_NODE_ID:${APP_SNOWFLAKE_WORKER_ID:1}}
+
+  short-code:
+    length: 6  # Base62 encoded short code length (supports ~56 billion URLs with 6 chars)
+  
+  qr-code:
+    size: 300  # QR code image size (300x300)
+    format: PNG
+  
+  geolocation:
+    api-url: https://ip-api.com/json/
+    timeout-seconds: 5
+    cache-ttl-hours: 24
+  
+  rate-limiting:
+    enabled: true
+    requests-per-minute: 60
+    requests-per-hour: 1000
+
+  queue:
+    impl: ${APP_QUEUE_IMPL:redis}
+    stream-key: ${REDIS_STREAM_KEY:clicks:stream}
+    group-name: ${REDIS_STREAM_GROUP:clicks:consumer-group}
+    consumer-name: ${REDIS_STREAM_CONSUMER:worker-1}
+    max-stream-length: 50000
+    batch-size: 50
+    poll-timeout-ms: 1000
+    idle-threshold-ms: 60000
+    publisher-threads: 4
+    publisher-buffer-capacity: 10000
+  consumer:
+    enabled: ${APP_CONSUMER_ENABLED:true}
+  routing:
+    mode: ${APP_ROUTING_MODE:round_robin}
+
+---
+# Production profile
+spring:
+  config:
+    activate:
+      on-profile: prod
+  jpa:
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+
+logging:
+  level:
+    root: WARN
+    com.urlshortener: INFO
+
+---
+# Local development profile (zero external setup: in-memory H2 + simple cache)
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    url: jdbc:h2:mem:urlshortener;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+  flyway:
+    enabled: false
+  cache:
+    type: simple
+app:
+  queue:
+    impl: memory

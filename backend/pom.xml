@@ -193,6 +193,13 @@
         </dependency>
 
         <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>1.19.7</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
         </dependency>
@@ -225,8 +232,6 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.14.0</version>
                 <configuration>
-                    <fork>true</fork>
-                    <executable>C:\Program Files\Java\jdk-25\bin\javac.exe</executable>
                     <release>25</release>
                 </configuration>
             </plugin>

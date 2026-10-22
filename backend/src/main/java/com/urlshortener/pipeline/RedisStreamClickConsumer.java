@@ -45,6 +45,10 @@ public class RedisStreamClickConsumer implements Runnable {
     private final AtomicBoolean running = new AtomicBoolean(false);
     private final AtomicLong ackedCount = new AtomicLong(0);
     private final AtomicLong recoveredPendingCount = new AtomicLong(0);
+    private final AtomicLong consecutiveErrors = new AtomicLong(0);
+
+    private io.micrometer.core.instrument.Counter reinitCounter;
+    private io.micrometer.core.instrument.Counter pollErrorCounter;
 
     private ExecutorService consumerExecutor;
     private ScheduledExecutorService recoveryExecutor;
@@ -56,11 +60,11 @@ public class RedisStreamClickConsumer implements Runnable {
 
     @Autowired
     public RedisStreamClickConsumer(
-            StringRedisTemplate redisTemplate,
+            @org.springframework.beans.factory.annotation.Qualifier("streamRedisTemplate") StringRedisTemplate redisTemplate,
             ClickEventProcessor processor,
             @Value("${app.queue.stream-key:clicks:stream}") String streamKey,
             @Value("${app.queue.group-name:clicks:consumer-group}") String groupName,
-            @Value("${app.queue.consumer-name:worker-1}") String consumerName,
+            @Value("${app.queue.consumer-name:worker-${WORKER_NODE_ID:1}}") String consumerName,
             @Value("${app.queue.batch-size:50}") int batchSize,
             @Value("${app.queue.poll-timeout-ms:1000}") long pollTimeoutMs,
             @Value("${app.queue.idle-threshold-ms:60000}") long idleThresholdMs,
@@ -80,6 +84,12 @@ public class RedisStreamClickConsumer implements Runnable {
             meterRegistry.gauge("click.events.acked", ackedCount);
             meterRegistry.gauge("click.events.recovered_pending", recoveredPendingCount);
             meterRegistry.gauge("click.stream.queue_depth", this, RedisStreamClickConsumer::getQueueDepth);
+            this.reinitCounter = io.micrometer.core.instrument.Counter.builder("click.stream.reinit.count")
+                .description("Stream/Group re-initializations count")
+                .register(meterRegistry);
+            this.pollErrorCounter = io.micrometer.core.instrument.Counter.builder("click.stream.errors")
+                .description("Stream poll errors count")
+                .register(meterRegistry);
         }
     }
 
@@ -134,6 +144,9 @@ public class RedisStreamClickConsumer implements Runnable {
                         true
                     );
                     log.info("Initialized consumer group '{}' on stream '{}' with MKSTREAM", groupName, streamKey);
+                    if (reinitCounter != null) {
+                        reinitCounter.increment();
+                    }
                 } catch (Exception e) {
                     // Group already exists (BUSYGROUP)
                     log.debug("Consumer group '{}' already exists: {}", groupName, e.getMessage());
@@ -195,6 +208,7 @@ public class RedisStreamClickConsumer implements Runnable {
             );
 
             if (records == null || records.isEmpty()) {
+                consecutiveErrors.set(0);
                 return 0;
             }
 
@@ -224,10 +238,14 @@ public class RedisStreamClickConsumer implements Runnable {
                 processedInBatch++;
                 currentBatchProcessed.incrementAndGet();
             }
+            consecutiveErrors.set(0);
             return processedInBatch;
         } catch (Exception e) {
             if (simulateCrashMidBatch) {
                 throw new RuntimeException(e);
+            }
+            if (pollErrorCounter != null) {
+                pollErrorCounter.increment();
             }
             String msg = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
             Throwable cause = e.getCause();
@@ -235,10 +253,13 @@ public class RedisStreamClickConsumer implements Runnable {
                 msg = msg + " (Cause: " + cause.getMessage() + ")";
             }
             String msgLower = msg.toLowerCase();
+            long errCount = consecutiveErrors.incrementAndGet();
+            long backoffMs = Math.min(5000L, 100L * (1L << Math.min(errCount, 5)));
+            log.warn("Redis stream poll warning #{} (backing off {}ms): {}", errCount, backoffMs, msg);
             if (msgLower.contains("nogroup") || msgLower.contains("no such key") || msgLower.contains("err") || msgLower.contains("execution")) {
                 initConsumerGroup();
             }
-            Thread.sleep(500);
+            Thread.sleep(backoffMs);
             return 0;
         }
     }

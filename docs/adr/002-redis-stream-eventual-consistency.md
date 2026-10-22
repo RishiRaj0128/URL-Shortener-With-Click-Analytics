@@ -19,12 +19,12 @@ We separated the **Redirect Fast Path** from the **Analytics Persistence Path** 
 1. **Redirect Fast Path**:
    - Resolves destination URL from L1 local caffeine cache or L2 Redis cache.
    - Evaluates expiration (`expires_at`) and soft-delete (`is_deleted`) status in memory.
-   - Publishes an immutable `ClickEvent` into Redis Stream `stream:click:events` via non-blocking write.
+   - Publishes an immutable `ClickEvent` into Redis Stream `clicks:stream` via non-blocking write.
    - Immediately returns HTTP 302 with `Location` header.
    - Total fast-path p95 latency is preserved under 1ms.
 
 2. **Analytics Ingestion Path (Asynchronous)**:
-   - Dedicated worker threads participate in a Redis Consumer Group (`click_analytics_group`).
+   - Dedicated worker threads participate in a Redis Consumer Group (`clicks:consumer-group`).
    - Batches events using `XREADGROUP` with automatic ACK and pending-list recovery (`XPENDING` / `XCLAIM`) to guarantee at-least-once processing.
    - Aggregates metrics into hourly time-bucketed rollups (`click_rollups`) with batch upserts, drastically reducing database write frequency.
    - Uses sliding-window Redis sorted sets and SHA-256 event fingerprinting to deduplicate replayed messages.

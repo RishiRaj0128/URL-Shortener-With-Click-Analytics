@@ -3,20 +3,7 @@
 # Java 25 / Spring Boot 3.3 Parent
 # ==========================================
 
-# Stage 1: Build
-FROM eclipse-temurin:25-jdk-noble AS builder
-WORKDIR /workspace
-
-# Copy Maven wrapper & POM files for layer caching
-COPY pom.xml ./pom.xml
-COPY src ./src
-
-# Build application artifact without running host-dependent unit tests
-RUN apt-get update && apt-get install -y --no-install-recommends maven \
-    && mvn clean package -DskipTests --batch-mode \
-    && cp target/url-shortener-service-*.jar app.jar
-
-# Stage 2: Minimal & Hardened Runtime
+# Stage: Minimal & Hardened Runtime
 FROM eclipse-temurin:25-jre-noble AS runner
 
 # Create dedicated non-root application user and group
@@ -27,8 +14,8 @@ RUN groupadd -g 10001 appgroup && \
 
 WORKDIR /app
 
-# Copy artifact from builder stage with strict ownership
-COPY --from=builder --chown=appuser:appgroup /workspace/app.jar ./app.jar
+# Copy pre-built artifact with strict ownership
+COPY --chown=appuser:appgroup target/url-shortener-service-*.jar ./app.jar
 
 # Configuration environment variables with secure production defaults
 ENV SERVER_PORT=8080 \

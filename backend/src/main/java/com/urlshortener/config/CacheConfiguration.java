@@ -93,17 +93,64 @@ public class CacheConfiguration implements CachingConfigurer {
   @org.springframework.beans.factory.annotation.Value("${spring.data.redis.port:6379}")
   private int redisPort;
 
+  @org.springframework.beans.factory.annotation.Value("${spring.data.redis.password:}")
+  private String redisPassword;
+
+  @org.springframework.beans.factory.annotation.Value("${app.redis.cache-timeout-ms:150}")
+  private long cacheTimeoutMs;
+
+  @org.springframework.beans.factory.annotation.Value("${app.redis.stream-timeout-ms:2000}")
+  private long streamTimeoutMs;
+
+  /**
+   * Primary Lettuce connection factory for cache reads, rate limiting, and fast path operations.
+   * Bound to 150ms command timeout (strictly below the Resilience4j 200ms slow-call threshold)
+   * to guarantee fast failover to PostgreSQL without starving Tomcat request threads.
+   */
   @Bean
+  @org.springframework.context.annotation.Primary
   public org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory redisConnectionFactory() {
     org.springframework.data.redis.connection.RedisStandaloneConfiguration serverConfig = 
         new org.springframework.data.redis.connection.RedisStandaloneConfiguration(redisHost, redisPort);
+    if (redisPassword != null && !redisPassword.isBlank()) {
+      serverConfig.setPassword(redisPassword);
+    }
     org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration clientConfig = 
         org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration.builder()
-            .commandTimeout(Duration.ofMillis(50))
+            .commandTimeout(Duration.ofMillis(cacheTimeoutMs))
             .clientOptions(io.lettuce.core.ClientOptions.builder()
-                .timeoutOptions(io.lettuce.core.TimeoutOptions.enabled(Duration.ofMillis(50)))
+                .timeoutOptions(io.lettuce.core.TimeoutOptions.enabled(Duration.ofMillis(cacheTimeoutMs)))
                 .build())
             .build();
     return new org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory(serverConfig, clientConfig);
+  }
+
+  /**
+   * Dedicated Lettuce connection factory for asynchronous streaming ingestion & consumer loop.
+   * Uses a 2000ms timeout to accommodate bulk batch reading, pending message inspection,
+   * and background processing without spurious Lettuce command timeouts.
+   */
+  @Bean("streamRedisConnectionFactory")
+  public org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory streamRedisConnectionFactory() {
+    org.springframework.data.redis.connection.RedisStandaloneConfiguration serverConfig = 
+        new org.springframework.data.redis.connection.RedisStandaloneConfiguration(redisHost, redisPort);
+    if (redisPassword != null && !redisPassword.isBlank()) {
+      serverConfig.setPassword(redisPassword);
+    }
+    org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration clientConfig = 
+        org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration.builder()
+            .commandTimeout(Duration.ofMillis(streamTimeoutMs))
+            .clientOptions(io.lettuce.core.ClientOptions.builder()
+                .timeoutOptions(io.lettuce.core.TimeoutOptions.enabled(Duration.ofMillis(streamTimeoutMs)))
+                .build())
+            .build();
+    return new org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory(serverConfig, clientConfig);
+  }
+
+  @Bean("streamRedisTemplate")
+  public org.springframework.data.redis.core.StringRedisTemplate streamRedisTemplate(
+      @org.springframework.beans.factory.annotation.Qualifier("streamRedisConnectionFactory") 
+      org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory streamFactory) {
+    return new org.springframework.data.redis.core.StringRedisTemplate(streamFactory);
   }
 }

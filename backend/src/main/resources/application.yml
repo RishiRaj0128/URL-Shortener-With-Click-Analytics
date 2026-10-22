@@ -79,6 +79,9 @@ app:
   jwt:
     secret: ${JWT_SECRET:4a8b1c7d2e3f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b}
     expiration: 86400000  # 24 hours in milliseconds
+  redis:
+    cache-timeout-ms: ${REDIS_CACHE_TIMEOUT_MS:150}
+    stream-timeout-ms: ${REDIS_STREAM_TIMEOUT_MS:2000}
   
   snowflake:
     worker-id: ${WORKER_NODE_ID:${APP_SNOWFLAKE_WORKER_ID:1}}
@@ -107,7 +110,7 @@ app:
     impl: ${APP_QUEUE_IMPL:redis}
     stream-key: ${REDIS_STREAM_KEY:clicks:stream}
     group-name: ${REDIS_STREAM_GROUP:clicks:consumer-group}
-    consumer-name: ${REDIS_STREAM_CONSUMER:worker-1}
+    consumer-name: ${REDIS_STREAM_CONSUMER:worker-${WORKER_NODE_ID:1}}
     max-stream-length: 50000
     batch-size: 50
     poll-timeout-ms: ${APP_QUEUE_POLL_TIMEOUT_MS:25}

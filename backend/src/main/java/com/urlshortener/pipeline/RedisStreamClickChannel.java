@@ -46,7 +46,7 @@ public class RedisStreamClickChannel implements ClickEventChannel {
 
     @Autowired
     public RedisStreamClickChannel(
-            StringRedisTemplate redisTemplate,
+            @org.springframework.beans.factory.annotation.Qualifier("streamRedisTemplate") StringRedisTemplate redisTemplate,
             @Value("${app.queue.stream-key:clicks:stream}") String streamKey,
             @Value("${app.queue.max-stream-length:50000}") long maxStreamLength,
             @Value("${app.queue.publisher-threads:4}") int publisherThreads,

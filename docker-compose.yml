@@ -61,6 +61,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       APP_QUEUE_IMPL: redis
+      REDIS_STREAM_CONSUMER: worker-1
       APP_SECURITY_TRUSTED_PROXIES: 172.28.0.100
     ports:
       - "8081:8081"
@@ -93,6 +94,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       APP_QUEUE_IMPL: redis
+      REDIS_STREAM_CONSUMER: worker-2
       APP_SECURITY_TRUSTED_PROXIES: 172.28.0.100
     ports:
       - "8082:8082"
@@ -125,6 +127,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       APP_QUEUE_IMPL: redis
+      REDIS_STREAM_CONSUMER: worker-3
       APP_SECURITY_TRUSTED_PROXIES: 172.28.0.100
     ports:
       - "8083:8083"
@@ -143,7 +146,7 @@ services:
           cpus: '1.0'
           memory: 512M
     ports:
-      - "8080:8080"
+      - "${ROUTER_PORT:-8000}:8080"
     networks:
       default:
         ipv4_address: 172.28.0.100

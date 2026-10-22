@@ -265,10 +265,48 @@ This document tracks all changes made per phase, assumptions adopted, and remain
 
 ---
 
+## Phase 7: Deployment & Infrastructure as Code (IaC)
+
+### Summary of Changes (PR: `feature/phase-7-deployment`)
+
+#### 1. Hardened Multi-Stage Dockerfile (`backend/Dockerfile`)
+- **Problem**: The original Dockerfile was single-stage, executed as `root`, depended on a pre-built local jar in `target/`, lacked JVM container cgroup awareness, and lacked container healthcheck directives.
+- **Resolution**:
+  - Re-architected `backend/Dockerfile` into a multi-stage build using `eclipse-temurin:25-jdk-noble` for compiling and `eclipse-temurin:25-jre-noble` for the runtime.
+  - Implemented an unprivileged application user (`appuser:appgroup`, UID/GID 10001).
+  - Configured container cgroup memory management: `-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=50.0 -XX:+ExitOnOutOfMemoryError`.
+  - Added native Docker `HEALTHCHECK` probing `curl -f http://localhost:8080/actuator/health`.
+
+#### 2. Production AWS Infrastructure as Code (`infra/terraform/`)
+- **Resolution**:
+  - Authored modular, production-ready Terraform 1.5+ configuration:
+    - [`vpc.tf`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/infra/terraform/vpc.tf): 3-tier VPC with public subnets, private application subnets, and private data subnets across 2 Availability Zones, with Internet Gateway and NAT Gateway.
+    - [`security_groups.tf`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/infra/terraform/security_groups.tf): Strict defense-in-depth security groups allowing ALB ingress from the internet, ECS ingress only from ALB, and RDS / Redis ingress strictly from ECS.
+    - [`alb.tf`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/infra/terraform/alb.tf): Application Load Balancer with target group routing to ECS Fargate tasks via HTTP health checks on `/actuator/health`.
+    - [`ecs.tf`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/infra/terraform/ecs.tf): Amazon ECS cluster with Container Insights, task definition with least-privilege IAM execution & task roles, CloudWatch logging with 30-day retention, and rolling zero-downtime service deployment (`min_healthy_percent = 100`, `max_percent = 200`).
+    - [`rds.tf`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/infra/terraform/rds.tf): Amazon RDS PostgreSQL 15 Multi-AZ instance with gp3 encrypted storage, automated backups, and private subnet placement.
+    - [`elasticache.tf`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/infra/terraform/elasticache.tf): Amazon ElastiCache Redis 7 replication group with multi-AZ automatic failover and private subnet isolation.
+    - [`outputs.tf`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/infra/terraform/outputs.tf): Exported endpoints, cluster identifiers, and ALB DNS name.
+
+#### 3. GitHub Actions Continuous Deployment with AWS OIDC (`.github/workflows/deploy.yml`)
+- **Resolution**:
+  - Implemented zero-static-credentials deployment pipeline using AWS OpenID Connect (OIDC) federation.
+  - Automatically builds Docker image, pushes to Amazon ECR, renders updated ECS task definitions, and performs zero-downtime rolling deployments to ECS Fargate with stability wait checks.
+
+#### 4. Deployment Runbook & Operations Guide (`docs/DEPLOY.md`)
+- **Resolution**:
+  - Created [`docs/DEPLOY.md`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/docs/DEPLOY.md) detailing architecture topology, IAM OIDC setup, Terraform commands, Docker Compose local launch, rolling update strategy, and rollback procedures.
+
+### Assumptions Made in Phase 7
+1. **AWS Fargate Deployment**: Target production environment runs on AWS ECS Fargate with Multi-AZ PostgreSQL and Redis to eliminate host-level patching overhead while guaranteeing high availability.
+2. **OIDC Federation**: Production deployments utilize short-lived STS tokens exchanged via GitHub OIDC without long-lived static AWS access keys stored in repository secrets.
+
+---
+
 ## Remaining Phases (Pending Approval)
 
-- **Phase 7**: Deployment & IaC (Multi-stage non-root Dockerfile, Terraform AWS infrastructure, GitHub Actions deploy workflow with OIDC, `docs/DEPLOY.md`).
 - **Phase 8**: Documentation & Portfolio Integrity (`RESUME_FACTS.md`, architecture ADRs, verified `INCIDENTS.md`).
+
 
 
 

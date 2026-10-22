@@ -9,7 +9,7 @@ import java.util.Optional;
 
 /**
  * Repository interface for URL entity.
- * Provides custom queries for finding URLs by short code and listing user URLs.
+ * Provides queries for finding URLs by short code and listing user URLs.
  */
 @Repository
 public interface UrlRepository extends JpaRepository<Url, Long> {
@@ -17,24 +17,36 @@ public interface UrlRepository extends JpaRepository<Url, Long> {
     /**
      * Find a URL by its short code.
      * Used during redirect to look up the original URL.
-     * This query should be fast and is a candidate for Redis caching.
      */
     Optional<Url> findByShortCode(String shortCode);
+
+    /**
+     * Find an active (non-deleted) URL by its short code.
+     */
+    Optional<Url> findByShortCodeAndIsDeletedFalse(String shortCode);
     
     /**
      * Find all URLs for a specific user.
-     * Used in the dashboard to list user's shortened URLs.
      */
     List<Url> findByUserId(Long userId);
+
+    /**
+     * Find all active (non-deleted) URLs for a specific user.
+     */
+    List<Url> findByUserIdAndIsDeletedFalse(Long userId);
     
     /**
      * Check if a short code already exists.
-     * Used to handle collisions in short code generation.
      */
     boolean existsByShortCode(String shortCode);
 
     /**
-     * Find top 50 most recent URLs for proactive cache warming.
+     * Find top 50 most recent active URLs for proactive cache warming.
+     */
+    List<Url> findTop50ByIsDeletedFalseOrderByCreatedAtDesc();
+
+    /**
+     * Legacy cache warming query.
      */
     List<Url> findTop50ByOrderByCreatedAtDesc();
 }

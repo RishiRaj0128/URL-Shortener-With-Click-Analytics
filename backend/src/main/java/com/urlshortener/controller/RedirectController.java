@@ -56,8 +56,9 @@ public class RedirectController {
      * 
      * 1. Look up short code in Redis cache (via @Cacheable in service)
      * 2. If cache miss, query PostgreSQL
-     * 3. Publish ClickEvent to high-throughput queue (non-blocking)
-     * 4. Return 302 redirect immediately (< 5ms response time)
+     * 3. Verify link is not expired or soft-deleted (evicts stale cache if found)
+     * 4. Publish ClickEvent to high-throughput queue (non-blocking)
+     * 5. Return 302 redirect immediately (< 5ms response time)
      */
     @GetMapping("/{shortCode}")
     public ResponseEntity<Void> redirect(
@@ -66,6 +67,12 @@ public class RedirectController {
         
         // Look up URL (cached in Redis)
         Url url = urlShorteningService.getUrlByShortCode(shortCode);
+
+        // Verification in fast path protects against serving cached entries that expired post-cache
+        if (url == null || url.isDeleted() || url.isExpired()) {
+            urlShorteningService.evictCache(shortCode);
+            return ResponseEntity.status(HttpStatus.GONE).build();
+        }
         
         // Extract headers in the request thread to avoid Tomcat recycling issues
         String userAgent = request.getHeader("User-Agent");
@@ -91,7 +98,7 @@ public class RedirectController {
         String destination = url.getOriginalUrl();
         if (destination != null) {
             destination = destination.trim();
-            if (!destination.startsWith("http://") && !destination.startsWith("https://") && !destination.startsWith("ftp://")) {
+            if (!destination.startsWith("http://") && !destination.startsWith("https://")) {
                 destination = "https://" + destination;
             }
         }

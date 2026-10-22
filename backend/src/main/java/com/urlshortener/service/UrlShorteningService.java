@@ -11,6 +11,7 @@ import com.urlshortener.repository.UserRepository;
 import com.urlshortener.util.Base62Encoder;
 import com.urlshortener.util.QrCodeGenerator;
 import com.urlshortener.util.SnowflakeIdGenerator;
+import com.urlshortener.util.UrlSafetyValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
@@ -27,13 +28,12 @@ import java.util.stream.Collectors;
  * Service for URL shortening operations.
  * 
  * Responsibilities:
- * - Generate distributed-safe 64-bit Snowflake short codes for URLs
+ * - Validate target URLs for SSRF safety, protocol restrictions, and length
+ * - Generate distributed-safe 64-bit Snowflake short codes or reserve custom aliases
+ * - Handle link expiration (TTL) and soft delete
  * - Store shortened URLs in a single write operation
- * - Look up shortened URLs (with caching)
+ * - Look up shortened URLs (with Redis caching and eviction)
  * - Generate QR codes
- * 
- * Cache strategy: @Cacheable on short-code lookups
- * On cache miss, queries database and populates cache.
  */
 @Service
 @Transactional
@@ -53,6 +53,7 @@ public class UrlShorteningService {
     private final QrCodeGenerator qrCodeGenerator;
     private final ClickService clickService;
     private final SnowflakeIdGenerator snowflakeIdGenerator;
+    private final UrlSafetyValidator urlSafetyValidator;
     
     @Autowired
     public UrlShorteningService(
@@ -60,17 +61,31 @@ public class UrlShorteningService {
             UserRepository userRepository,
             QrCodeGenerator qrCodeGenerator,
             ClickService clickService,
-            SnowflakeIdGenerator snowflakeIdGenerator) {
+            SnowflakeIdGenerator snowflakeIdGenerator,
+            @Autowired(required = false) UrlSafetyValidator urlSafetyValidator) {
         this.urlRepository = urlRepository;
         this.userRepository = userRepository;
         this.qrCodeGenerator = qrCodeGenerator;
         this.clickService = clickService;
         this.snowflakeIdGenerator = snowflakeIdGenerator;
+        this.urlSafetyValidator = urlSafetyValidator != null ? urlSafetyValidator : new UrlSafetyValidator();
+    }
+
+    /**
+     * Legacy constructor for backwards-compatibility in unit tests.
+     */
+    public UrlShorteningService(
+            UrlRepository urlRepository,
+            UserRepository userRepository,
+            QrCodeGenerator qrCodeGenerator,
+            ClickService clickService,
+            SnowflakeIdGenerator snowflakeIdGenerator) {
+        this(urlRepository, userRepository, qrCodeGenerator, clickService, snowflakeIdGenerator, new UrlSafetyValidator());
     }
     
     /**
-     * Create a shortened URL using zero-coordination Snowflake ID generation.
-     * Single DB write, eliminating DB roundtrips.
+     * Create a shortened URL using zero-coordination Snowflake ID generation or custom alias.
+     * Enforces SSRF safety, max length, protocol allowlist, and optional TTL.
      */
     public ShortenUrlResponse shortenUrl(ShortenUrlRequest request, String userEmail) {
         User user = userRepository.findByEmail(userEmail)
@@ -79,19 +94,50 @@ public class UrlShorteningService {
                 HttpStatus.NOT_FOUND
             ));
         
-        // Generate distributed-safe 64-bit Snowflake ID and pure Base62 code
-        long snowflakeId = snowflakeIdGenerator.nextId();
-        String shortCode = Base62Encoder.encode(snowflakeId);
-        
-        String normalizedUrl = request.getUrl().trim();
-        if (!normalizedUrl.startsWith("http://") && !normalizedUrl.startsWith("https://") && !normalizedUrl.startsWith("ftp://")) {
+        // Comprehensive SSRF and safety validation
+        String rawUrl = request.getUrl();
+        urlSafetyValidator.validateUrl(rawUrl);
+
+        String normalizedUrl = rawUrl.trim();
+        if (!normalizedUrl.startsWith("http://") && !normalizedUrl.startsWith("https://")) {
             normalizedUrl = "https://" + normalizedUrl;
+        }
+
+        // Determine short code: custom alias or Snowflake Base62
+        String shortCode;
+        if (request.getCustomAlias() != null && !request.getCustomAlias().trim().isEmpty()) {
+            String alias = request.getCustomAlias().trim();
+            urlSafetyValidator.validateCustomAlias(alias);
+            if (urlRepository.existsByShortCode(alias)) {
+                throw new UrlShortenerException(
+                    "Custom alias '" + alias + "' is already in use",
+                    HttpStatus.CONFLICT
+                );
+            }
+            shortCode = alias;
+        } else {
+            long snowflakeId = snowflakeIdGenerator.nextId();
+            shortCode = Base62Encoder.encode(snowflakeId);
+        }
+
+        // Expiration calculation
+        LocalDateTime expiresAt = request.getExpiresAt();
+        if (expiresAt == null && request.getTtlSeconds() != null && request.getTtlSeconds() > 0) {
+            expiresAt = LocalDateTime.now().plusSeconds(request.getTtlSeconds());
+        }
+        if (expiresAt != null && expiresAt.isBefore(LocalDateTime.now())) {
+            throw new UrlShortenerException(
+                "Expiration time cannot be in the past",
+                HttpStatus.BAD_REQUEST
+            );
         }
 
         Url url = new Url();
         url.setUser(user);
         url.setOriginalUrl(normalizedUrl);
         url.setShortCode(shortCode);
+        url.setExpiresAt(expiresAt);
+        url.setDeleted(false);
         url.setCreatedAt(LocalDateTime.now());
         url.setUpdatedAt(LocalDateTime.now());
         
@@ -105,8 +151,9 @@ public class UrlShorteningService {
         return new ShortenUrlResponse(
             shortCode,
             shortUrl,
-            request.getUrl(),
-            qrCode
+            normalizedUrl,
+            qrCode,
+            expiresAt
         );
     }
     
@@ -122,15 +169,39 @@ public class UrlShorteningService {
     @Cacheable(value = "urls", key = "#shortCode")
     @Transactional(readOnly = true)
     public Url getUrlByShortCode(String shortCode) {
-        return urlRepository.findByShortCode(shortCode)
+        Url url = urlRepository.findByShortCode(shortCode)
             .orElseThrow(() -> new UrlShortenerException(
                 "Short URL not found: " + shortCode,
                 HttpStatus.NOT_FOUND
             ));
+
+        if (url.isDeleted()) {
+            throw new UrlShortenerException(
+                "Short URL has been deleted: " + shortCode,
+                HttpStatus.GONE
+            );
+        }
+
+        if (url.isExpired()) {
+            throw new UrlShortenerException(
+                "Short URL has expired: " + shortCode,
+                HttpStatus.GONE
+            );
+        }
+
+        return url;
+    }
+
+    /**
+     * Explicitly evicts a short code from Redis cache.
+     */
+    @CacheEvict(value = "urls", key = "#shortCode")
+    public void evictCache(String shortCode) {
+        // Cache eviction hook
     }
     
     /**
-     * Get all URLs for a user.
+     * Get all active (non-deleted) URLs for a user.
      */
     public List<UrlResponse> getUserUrls(String userEmail) {
         User user = userRepository.findByEmail(userEmail)
@@ -139,7 +210,7 @@ public class UrlShorteningService {
                 HttpStatus.NOT_FOUND
             ));
         
-        List<Url> urls = urlRepository.findByUserId(user.getId());
+        List<Url> urls = urlRepository.findByUserIdAndIsDeletedFalse(user.getId());
         
         return urls.stream()
             .map(url -> {
@@ -150,15 +221,17 @@ public class UrlShorteningService {
                     buildShortUrl(url.getShortCode()),
                     url.getOriginalUrl(),
                     url.getCreatedAt(),
-                    clickCount
+                    clickCount,
+                    url.getExpiresAt(),
+                    url.isExpired()
                 );
             })
             .collect(Collectors.toList());
     }
     
     /**
-     * Delete a shortened URL.
-     * Evicts from cache and removes from database.
+     * Soft-deletes a shortened URL.
+     * Evicts from cache immediately and marks as deleted in database.
      */
     @CacheEvict(value = "urls", key = "#shortCode")
     public void deleteUrl(String shortCode, String userEmail) {
@@ -182,13 +255,14 @@ public class UrlShorteningService {
             );
         }
         
-        urlRepository.delete(url);
+        url.setDeleted(true);
+        url.setDeletedAt(LocalDateTime.now());
+        urlRepository.save(url);
     }
     
     /**
      * Update target URL for an existing short code.
-     * Crucial Cache-Aside Invalidation: Evicts Redis entry immediately on write
-     * so subsequent redirects read the updated destination instead of waiting for TTL expiry.
+     * Validates new URL safety and evicts Redis cache-aside entry immediately.
      */
     @CacheEvict(value = "urls", key = "#shortCode")
     public UrlResponse updateUrl(String shortCode, String newOriginalUrl, String userEmail) {
@@ -210,8 +284,15 @@ public class UrlShorteningService {
                 HttpStatus.FORBIDDEN
             );
         }
+
+        urlSafetyValidator.validateUrl(newOriginalUrl);
+
+        String normalizedUrl = newOriginalUrl.trim();
+        if (!normalizedUrl.startsWith("http://") && !normalizedUrl.startsWith("https://")) {
+            normalizedUrl = "https://" + normalizedUrl;
+        }
         
-        url.setOriginalUrl(newOriginalUrl);
+        url.setOriginalUrl(normalizedUrl);
         url.setUpdatedAt(LocalDateTime.now());
         Url updated = urlRepository.save(url);
         
@@ -222,7 +303,9 @@ public class UrlShorteningService {
             buildShortUrl(updated.getShortCode()),
             updated.getOriginalUrl(),
             updated.getCreatedAt(),
-            clickCount
+            clickCount,
+            updated.getExpiresAt(),
+            updated.isExpired()
         );
     }
     

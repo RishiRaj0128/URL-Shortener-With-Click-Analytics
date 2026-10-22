@@ -83,12 +83,58 @@ This document tracks all changes made per phase, assumptions adopted, and remain
 
 ---
 
+## Phase 3: Product Basics & Security Hardening (`feature/phase-3-security-and-product-basics`)
+
+### PR Summary: SSRF Prevention, Protocol Allowlisting, Length Bounds, Custom Aliases, Expiration, Soft Delete, and Cryptographic Hardening
+
+#### 1. Input Validation & SSRF Prevention
+- **Problem**: Previous implementation allowed `ftp://` schemes, did not restrict max URL length, did not validate against private/internal IP targets (leaving the system vulnerable to SSRF attacks targeting container networks or cloud metadata endpoints `169.254.169.254`), and allowed self-referencing redirect loops.
+- **Resolution**:
+  - Implemented [`UrlSafetyValidator.java`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/main/java/com/urlshortener/util/UrlSafetyValidator.java).
+  - Restricted protocols strictly to `http://` and `https://` (blocking `ftp:`, `javascript:`, `file:`, `data:`, `mailto:`, etc.).
+  - Enforced RFC 2616 max URL length of **2048 characters**.
+  - Implemented binary IP inspection blocking loopback (`127.0.0.0/8`, `::1`), private networks (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`), link-local and cloud metadata (`169.254.0.0/16`, `169.254.169.254`, `fe80::/10`), carrier-grade NAT (`100.64.0.0/10`), and local domain suffixes (`.localhost`, `.local`, `.internal`).
+  - Added self-referencing loop detection against `app.base-url`.
+  - Added 42 unit test scenarios in [`UrlSafetyValidatorTest.java`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/test/java/com/urlshortener/util/UrlSafetyValidatorTest.java).
+
+#### 2. Custom Aliases with Reserved Keyword Protection
+- **Problem**: Users could not specify readable custom aliases, and arbitrary strings could collide with system routing paths (`/api`, `/actuator`, `/health`, etc.).
+- **Resolution**:
+  - Extended [`ShortenUrlRequest.java`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/main/java/com/urlshortener/dto/ShortenUrlRequest.java) to accept an optional `customAlias`.
+  - Enforced format `^[a-zA-Z0-9_-]{3,30}$`.
+  - Blocked reserved system paths (`api`, `auth`, `login`, `signup`, `admin`, `health`, `metrics`, `actuator`, `shorten`, `analytics`, etc.) with `HTTP 400 Bad Request`.
+  - Collision check against existing short codes returns `HTTP 409 Conflict`.
+
+#### 3. Link Expiration (TTL) & Soft Delete Semantics
+- **Problem**: Links had no TTL support, and deleting a URL was a hard delete that purged referential integrity with click events.
+- **Resolution**:
+  - Added Flyway migration [`V5__Add_url_expiration_and_soft_delete.sql`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/main/resources/db/migration/V5__Add_url_expiration_and_soft_delete.sql) adding `expires_at`, `is_deleted`, and `deleted_at` with database indices.
+  - Updated [`Url.java`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/main/java/com/urlshortener/entity/Url.java) and [`UrlRepository.java`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/main/java/com/urlshortener/repository/UrlRepository.java) to filter active links via `findByUserIdAndIsDeletedFalse`.
+  - Updated [`RedirectController.java`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/main/java/com/urlshortener/controller/RedirectController.java) to verify expiration and deletion on the redirect fast path; expired or deleted links immediately evict stale cache entries and return `HTTP 410 Gone`.
+  - Updated `deleteUrl` in [`UrlShorteningService.java`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/main/java/com/urlshortener/service/UrlShorteningService.java) to perform soft deletion and instant `@CacheEvict`.
+
+#### 4. Cryptographic Authentication & Password Hardening
+- **Problem**: JWT secret accepted default placeholder strings or weak secrets, and BCrypt work factor was unconfigured (defaulted to 10).
+- **Resolution**:
+  - Enforced strict startup validation in [`JwtConfiguration.java`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/main/java/com/urlshortener/config/JwtConfiguration.java): rejects keys under 256 bits (32 bytes) or known trivial defaults with an `IllegalStateException`.
+  - Provided a secure 512-bit hex default fallback in [`application.yml`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/main/resources/application.yml) and documented deployment config in [`.env.example`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/.env.example).
+  - Explicitly configured BCrypt strength to **12 rounds** in [`SecurityConfiguration.java`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/main/java/com/urlshortener/config/SecurityConfiguration.java).
+
+#### 5. Documentation & Phishing Mitigation Guide
+- Added [`docs/SECURITY.md`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/docs/SECURITY.md) covering threat models, abuse vectors, SSRF protection details, and operational takedown procedures.
+
+### Assumptions Made in Phase 3
+1. **SSRF Blocking**: Blocking private subnets and loopback addresses is mandatory for internet-facing shorteners. Test suites use public domains (`example.com`, `google.com`) or mock objects.
+2. **Soft Delete Preservation**: Soft-deleting URLs preserves foreign key click history for traffic analytics while immediately rejecting new redirects with `HTTP 410 Gone`.
+
+---
+
 ## Remaining Phases (Pending Approval)
 
-- **Phase 3**: Product basics & security (SSRF prevention, private/loopback IP blocking, protocol restrictions, max URL length, link expiration/TTL, custom aliases, soft delete, mandatory non-default JWT secret validation).
 - **Phase 4**: Scope cleanup (Repurpose `BanditRouter` to multi-destination A/B link optimization, eliminate banking references, relocate EWMA node scoring to experiments, soften sensationalist wording).
 - **Phase 5**: Observability (Micrometer Prometheus meters, provisioned Grafana dashboard in `docker-compose.yml`, alert rules, OpenTelemetry distributed tracing).
 - **Phase 6**: Testing & CI (Testcontainers PostgreSQL/Redis integration suite, unit tests for anomaly math and Thompson sampling, GitHub Actions with Trivy, CodeQL, and Dependabot).
 - **Phase 7**: Deployment & IaC (Multi-stage non-root Dockerfile, Terraform AWS infrastructure, GitHub Actions deploy workflow with OIDC, `docs/DEPLOY.md`).
 - **Phase 8**: Documentation & Portfolio Integrity (`RESUME_FACTS.md`, architecture ADRs, verified `INCIDENTS.md`).
+
 

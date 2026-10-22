@@ -8,14 +8,16 @@ import java.time.LocalDateTime;
  * 
  * Design decisions:
  * - short_code is UNIQUE to enable fast lookups and ensure no collisions
- * - Indexed on both short_code (for redirects) and user_id (for user's URL
- * list)
+ * - Indexed on short_code (for redirects), user_id (for user's URL list),
+ *   expires_at (for TTL/cleanup), and is_deleted (for soft delete filtering)
  * - Foreign key constraint with CASCADE delete ensures referential integrity
  */
 @Entity
 @Table(name = "urls", indexes = {
     @Index(name = "idx_urls_short_code", columnList = "short_code", unique = true),
-    @Index(name = "idx_urls_user_id", columnList = "user_id")
+    @Index(name = "idx_urls_user_id", columnList = "user_id"),
+    @Index(name = "idx_urls_expires_at", columnList = "expires_at"),
+    @Index(name = "idx_urls_is_deleted", columnList = "is_deleted")
 })
 public class Url {
 
@@ -31,8 +33,17 @@ public class Url {
   @Column(name = "original_url", nullable = false, columnDefinition = "TEXT")
   private String originalUrl;
 
-  @Column(name = "short_code", unique = true, length = 20)
+  @Column(name = "short_code", unique = true, length = 30)
   private String shortCode;
+
+  @Column(name = "expires_at")
+  private LocalDateTime expiresAt;
+
+  @Column(name = "is_deleted", nullable = false)
+  private boolean isDeleted = false;
+
+  @Column(name = "deleted_at")
+  private LocalDateTime deletedAt;
 
   @Column(name = "created_at", nullable = false, updatable = false)
   private LocalDateTime createdAt;
@@ -51,6 +62,19 @@ public class Url {
     this.shortCode = shortCode;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
+    this.isDeleted = false;
+  }
+
+  public Url(Long id, User user, String originalUrl, String shortCode, LocalDateTime expiresAt,
+      LocalDateTime createdAt, LocalDateTime updatedAt) {
+    this.id = id;
+    this.user = user;
+    this.originalUrl = originalUrl;
+    this.shortCode = shortCode;
+    this.expiresAt = expiresAt;
+    this.createdAt = createdAt;
+    this.updatedAt = updatedAt;
+    this.isDeleted = false;
   }
 
   public Long getId() {
@@ -83,6 +107,34 @@ public class Url {
 
   public void setShortCode(String shortCode) {
     this.shortCode = shortCode;
+  }
+
+  public LocalDateTime getExpiresAt() {
+    return expiresAt;
+  }
+
+  public void setExpiresAt(LocalDateTime expiresAt) {
+    this.expiresAt = expiresAt;
+  }
+
+  public boolean isDeleted() {
+    return isDeleted;
+  }
+
+  public void setDeleted(boolean deleted) {
+    isDeleted = deleted;
+  }
+
+  public LocalDateTime getDeletedAt() {
+    return deletedAt;
+  }
+
+  public void setDeletedAt(LocalDateTime deletedAt) {
+    this.deletedAt = deletedAt;
+  }
+
+  public boolean isExpired() {
+    return expiresAt != null && LocalDateTime.now().isAfter(expiresAt);
   }
 
   public LocalDateTime getCreatedAt() {

@@ -12,6 +12,8 @@ public class UrlResponse {
     private String originalUrl;
     private LocalDateTime createdAt;
     private Long clickCount;
+    private LocalDateTime expiresAt;
+    private boolean expired;
     
     public UrlResponse() {}
     
@@ -22,6 +24,19 @@ public class UrlResponse {
         this.originalUrl = originalUrl;
         this.createdAt = createdAt;
         this.clickCount = clickCount;
+        this.expiresAt = null;
+        this.expired = false;
+    }
+
+    public UrlResponse(Long id, String shortCode, String shortUrl, String originalUrl, LocalDateTime createdAt, Long clickCount, LocalDateTime expiresAt, boolean expired) {
+        this.id = id;
+        this.shortCode = shortCode;
+        this.shortUrl = shortUrl;
+        this.originalUrl = originalUrl;
+        this.createdAt = createdAt;
+        this.clickCount = clickCount;
+        this.expiresAt = expiresAt;
+        this.expired = expired;
     }
     
     public Long getId() {
@@ -70,5 +85,21 @@ public class UrlResponse {
     
     public void setClickCount(Long clickCount) {
         this.clickCount = clickCount;
+    }
+
+    public LocalDateTime getExpiresAt() {
+        return expiresAt;
+    }
+
+    public void setExpiresAt(LocalDateTime expiresAt) {
+        this.expiresAt = expiresAt;
+    }
+
+    public boolean isExpired() {
+        return expired;
+    }
+
+    public void setExpired(boolean expired) {
+        this.expired = expired;
     }
 }

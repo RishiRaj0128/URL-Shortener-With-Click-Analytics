@@ -32,7 +32,8 @@ public class SecurityConfiguration {
 
   @Bean
   public PasswordEncoder passwordEncoder() {
-    return new BCryptPasswordEncoder();
+    // Explicitly configure BCrypt work factor to 12 rounds for strong hash security
+    return new BCryptPasswordEncoder(12);
   }
 
   @Bean

@@ -125,4 +125,112 @@ class SnowflakeIdGeneratorTest {
         assertThrows(IllegalArgumentException.class, () -> new SnowflakeIdGenerator(-1));
         assertThrows(IllegalArgumentException.class, () -> new SnowflakeIdGenerator(1024));
     }
+
+    @Test
+    @DisplayName("Length & Truncation Collision Proof: Snowflake Base62 produces 10-11 chars; truncating to 6 causes collisions")
+    void shouldDemonstrateFullBase62LengthAndProveTruncationCausesCollisions() {
+        // Epoch: 2026-01-01T00:00:00Z. Simulated time 10 months into epoch:
+        Instant fixedInstant = Instant.parse("2026-10-22T12:00:00Z");
+        Clock clock = Clock.fixed(fixedInstant, ZoneOffset.UTC);
+        SnowflakeIdGenerator generator = new SnowflakeIdGenerator(1L, SnowflakeIdGenerator.DEFAULT_CUSTOM_EPOCH, clock);
+
+        long id = generator.nextId();
+        String fullBase62 = Base62Encoder.encode(id);
+
+        // Explicit length assertion: 64-bit Snowflake encodes to 10-11 chars, NOT 6 chars!
+        assertTrue(fullBase62.length() >= 10 && fullBase62.length() <= 11,
+                "Snowflake Base62 must be 10-11 characters, got length: " + fullBase62.length() + " (" + fullBase62 + ")");
+
+        // Now demonstrate why a 6-character truncation destroys collision-freedom:
+        // Generate IDs with different sequences within the same millisecond or adjacent ms:
+        Set<String> truncatedCodes = new HashSet<>();
+        boolean collisionFound = false;
+
+        for (int i = 0; i < 2000; i++) {
+            long currentId = generator.nextId();
+            String code = Base62Encoder.encode(currentId);
+            // Prefix truncation (taking first 6 chars):
+            String truncated = code.substring(0, 6);
+            if (!truncatedCodes.add(truncated)) {
+                collisionFound = true;
+                break;
+            }
+        }
+
+        assertTrue(collisionFound,
+                "Truncating 64-bit Snowflake Base62 to 6 characters MUST cause collisions (prefix shared across time window)");
+    }
+
+    @Test
+    @DisplayName("Clock Drift Metric: Minor drift <= 5ms waits and increments wait metric")
+    void shouldIncrementWaitMetricOnMinorDrift() {
+        AtomicBoolean clockMovedBack = new AtomicBoolean(false);
+        Instant t0 = Instant.parse("2026-10-22T12:00:00.100Z");
+        Instant tMinus3 = Instant.parse("2026-10-22T12:00:00.097Z"); // 3ms backward drift
+        Instant tRecovered = Instant.parse("2026-10-22T12:00:00.105Z");
+
+        Clock customClock = new Clock() {
+            private int callCount = 0;
+            @Override
+            public ZoneOffset getZone() { return ZoneOffset.UTC; }
+            @Override
+            public Clock withZone(java.time.ZoneId zone) { return this; }
+            @Override
+            public Instant instant() {
+                callCount++;
+                if (callCount == 1) return t0;
+                if (callCount == 2) return tMinus3; // drift backwards by 3ms
+                return tRecovered;
+            }
+        };
+
+        SnowflakeIdGenerator generator = new SnowflakeIdGenerator(2L, SnowflakeIdGenerator.DEFAULT_CUSTOM_EPOCH, customClock);
+        long id1 = generator.nextId();
+        long id2 = generator.nextId();
+
+        assertTrue(id2 > id1, "Monotonic ID progression after drift recovery");
+        assertTrue(generator.getClockDriftWaitCount() > 0, "Wait metric must increment on minor drift");
+        assertEquals(0, generator.getClockDriftErrorCount(), "No error metric on recovered drift");
+    }
+
+    @Test
+    @DisplayName("Clock Drift Metric: Major drift > 5ms throws exception and increments error metric")
+    void shouldIncrementErrorMetricOnMajorDrift() {
+        Instant t0 = Instant.parse("2026-10-22T12:00:00.100Z");
+        Instant tMinus50 = Instant.parse("2026-10-22T12:00:00.050Z"); // 50ms backward drift
+
+        Clock customClock = new Clock() {
+            private int callCount = 0;
+            @Override
+            public ZoneOffset getZone() { return ZoneOffset.UTC; }
+            @Override
+            public Clock withZone(java.time.ZoneId zone) { return this; }
+            @Override
+            public Instant instant() {
+                callCount++;
+                if (callCount == 1) return t0;
+                return tMinus50; // drift backwards by 50ms
+            }
+        };
+
+        SnowflakeIdGenerator generator = new SnowflakeIdGenerator(3L, SnowflakeIdGenerator.DEFAULT_CUSTOM_EPOCH, customClock);
+        generator.nextId(); // First ID establishes lastTimestamp
+
+        assertThrows(IllegalStateException.class, generator::nextId, "Must fail fast on major backward clock drift");
+        assertEquals(1, generator.getClockDriftErrorCount(), "Error metric must increment on unrecoverable clock drift");
+    }
+
+    @Test
+    @DisplayName("Worker ID Resolution: Safely extracts worker ID from config, env, or hostname")
+    void shouldResolveWorkerIdSafely() {
+        // Explicit property
+        assertEquals(5L, SnowflakeIdGenerator.resolveWorkerId("5", null, null));
+        // Fallback to env var
+        assertEquals(8L, SnowflakeIdGenerator.resolveWorkerId(null, "8", null));
+        // Fallback to hostname suffix (e.g., k8s statefulset or docker container: app-2)
+        assertEquals(2L, SnowflakeIdGenerator.resolveWorkerId(null, null, "urlshortener-node-2"));
+        // Default to 1 if none provided
+        assertEquals(1L, SnowflakeIdGenerator.resolveWorkerId(null, null, "unknown-host"));
+    }
 }
+

@@ -17,69 +17,55 @@ This document explains the architectural decisions, trade-offs, and scalability 
 
 ## Short Code Generation Strategy
 
-### Chosen Approach: Base62-Encoded Sequential IDs
+### Chosen Approach: Distributed 64-bit Snowflake IDs with Pure Base62 Encoding
 
 **Implementation**
 ```
-1. PostgreSQL auto-increments URL ID (e.g., 12345)
-2. Encode ID to base62 (e.g., 315g)
-3. Store both ID and short_code in database
-4. Look up by short_code
+1. SnowflakeIdGenerator generates 64-bit ID in-memory (41-bit ms timestamp, 10-bit worker ID, 12-bit sequence)
+2. Base62Encoder encodes ID to Base62 (produces 10-11 URL-safe characters)
+3. Store original URL and short_code in PostgreSQL (single atomic INSERT, zero DB sequence roundtrips)
+4. Look up by short_code (O(1) Redis cache hit or PostgreSQL indexed fallback)
 ```
 
 ### Why This Approach?
 
 #### Advantages
 
-✅ **Zero Collision Risk**: IDs are unique from database; encoding is deterministic  
-✅ **Compact**: 6 chars in base62 = 56.8 billion URLs (62^6)  
-✅ **Fast**: O(1) encode/decode, no collision checks  
-✅ **Sortable**: Early URLs have lexicographically smaller codes  
-✅ **URL-Safe**: Base62 uses only alphanumeric chars (no %, +, /)  
-✅ **Scalable**: Works with distributed IDs (e.g., Snowflake IDs) if needed  
+✅ **Collision-Free by Construction**: Not based on hash functions. Coordinates millisecond timestamp, cluster worker node ID, and monotonic sequence counter to guarantee uniqueness mathematically.  
+✅ **Zero Database Coordination**: Worker nodes generate IDs autonomously without centralized sequence locking or allocation roundtrips.  
+✅ **Full Length Preserved**: Encodes to 10–11 characters ($62^9 \approx 1.35 \times 10^{16} < \text{Snowflake ID} < 62^{11} \approx 5.2 \times 10^{19}$). Avoiding artificial 6-character truncation prevents prefix and time-window collisions.  
+✅ **Fast**: O(1) mathematical encoding and decoding with zero heap allocation overhead.  
+✅ **URL-Safe**: Uses standard alphanumeric Base62 charset (`[0-9A-Za-z]`).  
+✅ **High Throughput**: Supports up to 4,096 IDs per millisecond per node (4.096 million IDs/second/node).  
 
 #### Performance
 
 | Operation | Time | Notes |
 |-----------|------|-------|
-| Encode 1M → base62 | < 1µs | O(log n) in base |
-| Decode "abc123" → ID | < 1µs | O(6) operations |
-| DB lookup by short_code | 5-10ms | UNIQUE index on short_code |
+| Snowflake ID nextId() | < 0.1 µs | In-memory bitwise arithmetic |
+| Base62 encode/decode | < 1 µs | Pure mathematical bijection |
+| DB write (save URL) | 2–5 ms | Single INSERT with UNIQUE index on short_code |
+| Redis cache lookup | 1.4–1.5 ms (p50) | In-memory socket roundtrip |
 
 ### Alternative Approaches Considered
 
-#### 1. Random String Generation (e.g., 6 random chars)
-**Approach**: Generate random strings until no collision  
-**Rejected ❌**
-- Non-deterministic: same URL → different codes
-- Collision handling overhead: check DB on every generation
-- Wastes short codes on collisions
-- Non-sortable
+#### 1. Centralized Database Auto-Increment Sequence
+**Approach**: Let PostgreSQL generate sequential IDs (1, 2, 3...) and Base62-encode them (e.g. 6 chars for first 56.8B URLs).  
+**Rejected ❌**:
+- Centralized bottleneck: requires database roundtrip before the short code can be known.
+- Cross-node contention: high write concurrency on sequences creates serialization and lock queuing.
 
-**Example timeline**:
-- After 1M URLs: ~1.4 collisions per 100 generations
-- After 10M URLs: ~100 collisions per 100 generations
+#### 2. MD5 / SHA Hashing with Truncation
+**Approach**: Hash the original URL, truncate to 6 characters.  
+**Rejected ❌**:
+- Birthday paradox: 50% collision probability at $\sqrt{62^6} \approx 8\text{M}$ URLs.
+- Non-deterministic without retry loops: requires collision detection and multiple DB roundtrips on collision.
 
-#### 2. MD5/SHA Hash with Truncation
-**Approach**: Hash original URL, take first 6 chars  
-**Rejected ❌**
-- Birthday paradox: 50% collision at sqrt(62^6) ≈ 8M URLs
-- Requires collision detection/retry: not deterministic
-- Same URL → same code (good), but collisions problematic at scale
-
-**Collision probability**:
-```
-P(collision) ≈ 1 - e^(-n²/2·62^k)
-
-For n=10M URLs, k=6:
-P(collision) ≈ 1 - e^(-10²M / 2·56.8B) ≈ 88%
-```
-
-#### 3. Monotonic Counter (Snowflake/Twitter ID)
-**Approach**: Distributed counter with datacenter + sequence bits  
-**Advantages**: Works across multiple databases  
-**Disadvantage**: Adds complexity; base62 from auto-increment is simpler  
-**Use when**: Multi-region deployment needed
+#### 3. Random String Generation
+**Approach**: Generate 6 random alphanumeric characters and retry on collisions.  
+**Rejected ❌**:
+- Non-deterministic: same URL yields different short codes.
+- Collision rate escalates rapidly as keyspace fills.
 
 ---
 

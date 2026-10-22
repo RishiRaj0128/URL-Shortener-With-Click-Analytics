@@ -18,7 +18,7 @@ A production-grade URL shortening service with comprehensive click analytics, bu
 
 ## Features
 
-- **URL Shortening**: Generate short, unique aliases using base62 encoding
+- **URL Shortening**: Generate compact, collision-free short codes using 64-bit Snowflake IDs encoded in Base62 (10–11 characters, collision-free by construction)
 - **QR Code Generation**: Automatic QR code generation for every shortened URL
 - **Click Tracking**: Comprehensive analytics with:
   - Device type (mobile, tablet, desktop)
@@ -479,9 +479,9 @@ Response (204): No Content
 
 ### Short Code Generation
 
-- **Base62 Encoding**: 6 characters = ~56 billion unique codes
-- **Collision Probability**: Zero (deterministic mapping from ID)
-- **Scalability**: Supports 1M+ URLs easily
+- **64-bit Snowflake ID + Base62 Encoding**: Produces 10 to 11 alphanumeric characters across a 69.7-year lifespan from custom epoch `2026-01-01T00:00:00Z`.
+- **Collision-Free by Construction**: Zero collisions by mathematical construction. Uniqueness is guaranteed by coordinating 41 timestamp bits, 10 worker node bits (up to 1,024 cluster nodes), and 12 sequence bits (4,096 IDs/ms/node), followed by a deterministic Base62 bijection. Full length is preserved without truncation.
+- **Scalability**: Supports up to 4.096 million unique IDs per second per node without database lock contention or sequential roundtrips.
 
 ### Analytics Queries
 

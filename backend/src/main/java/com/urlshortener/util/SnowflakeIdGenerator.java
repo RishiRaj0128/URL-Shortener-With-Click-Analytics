@@ -5,6 +5,9 @@ import org.springframework.stereotype.Component;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Distributed-safe 64-bit Snowflake ID Generator.
@@ -43,12 +46,19 @@ public class SnowflakeIdGenerator {
     private long sequence = 0L;
     private long lastTimestamp = -1L;
 
+    private final AtomicLong clockDriftWaitCount = new AtomicLong(0);
+    private final AtomicLong clockDriftErrorCount = new AtomicLong(0);
+
     public SnowflakeIdGenerator() {
         this(1L, DEFAULT_CUSTOM_EPOCH, Clock.systemUTC());
     }
 
     @org.springframework.beans.factory.annotation.Autowired
-    public SnowflakeIdGenerator(@Value("${app.snowflake.worker-id:1}") long workerId) {
+    public SnowflakeIdGenerator(@Value("${app.snowflake.worker-id:}") String workerIdProp) {
+        this(resolveWorkerId(workerIdProp, System.getenv("WORKER_NODE_ID"), System.getenv("HOSTNAME")), DEFAULT_CUSTOM_EPOCH, Clock.systemUTC());
+    }
+
+    public SnowflakeIdGenerator(long workerId) {
         this(workerId, DEFAULT_CUSTOM_EPOCH, Clock.systemUTC());
     }
 
@@ -71,6 +81,34 @@ public class SnowflakeIdGenerator {
     }
 
     /**
+     * Resolves worker ID safely from property, environment, or hostname suffix, falling back to 1.
+     */
+    public static long resolveWorkerId(String configuredWorkerId, String envWorkerId, String hostname) {
+        if (configuredWorkerId != null && !configuredWorkerId.isBlank()) {
+            try {
+                long val = Long.parseLong(configuredWorkerId.trim());
+                if (val >= 0 && val <= MAX_WORKER_ID) return val;
+            } catch (NumberFormatException ignored) {}
+        }
+        if (envWorkerId != null && !envWorkerId.isBlank()) {
+            try {
+                long val = Long.parseLong(envWorkerId.trim());
+                if (val >= 0 && val <= MAX_WORKER_ID) return val;
+            } catch (NumberFormatException ignored) {}
+        }
+        if (hostname != null && !hostname.isBlank()) {
+            Matcher m = Pattern.compile("-(\\d+)$").matcher(hostname.trim());
+            if (m.find()) {
+                try {
+                    long val = Long.parseLong(m.group(1));
+                    return val % (MAX_WORKER_ID + 1);
+                } catch (NumberFormatException ignored) {}
+            }
+        }
+        return 1L;
+    }
+
+    /**
      * Generate the next unique Snowflake ID. Thread-safe.
      */
     public synchronized long nextId() {
@@ -80,6 +118,7 @@ public class SnowflakeIdGenerator {
             long drift = lastTimestamp - currentTimestamp;
             // Handle minor NTP clock backwards jitter (up to 5ms) by waiting
             if (drift <= 5) {
+                clockDriftWaitCount.incrementAndGet();
                 try {
                     Thread.sleep(drift + 1);
                 } catch (InterruptedException e) {
@@ -88,6 +127,7 @@ public class SnowflakeIdGenerator {
                 currentTimestamp = getCurrentTimeMillis();
             }
             if (currentTimestamp < lastTimestamp) {
+                clockDriftErrorCount.incrementAndGet();
                 throw new IllegalStateException(
                     String.format("Clock moved backwards. Refusing to generate ID for %d ms", lastTimestamp - currentTimestamp)
                 );
@@ -129,6 +169,14 @@ public class SnowflakeIdGenerator {
 
     public long getCustomEpoch() {
         return customEpoch;
+    }
+
+    public long getClockDriftWaitCount() {
+        return clockDriftWaitCount.get();
+    }
+
+    public long getClockDriftErrorCount() {
+        return clockDriftErrorCount.get();
     }
 
     /**

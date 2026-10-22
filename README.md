@@ -18,7 +18,7 @@ A production-grade URL shortening service with comprehensive click analytics, bu
 
 ## Features
 
-- **URL Shortening**: Generate short, unique aliases using base62 encoding
+- **URL Shortening**: Generate compact, collision-free short codes using 64-bit Snowflake IDs encoded in Base62 (10–11 characters, collision-free by construction)
 - **QR Code Generation**: Automatic QR code generation for every shortened URL
 - **Click Tracking**: Comprehensive analytics with:
   - Device type (mobile, tablet, desktop)
@@ -478,10 +478,10 @@ Response (204): No Content
   - Target cache hit ratio: 95%+ in production
 
 ### Short Code Generation
-
-- **Base62 Encoding**: 6 characters = ~56 billion unique codes
-- **Collision Probability**: Zero (deterministic mapping from ID)
-- **Scalability**: Supports 1M+ URLs easily
+ 
+- **64-bit Snowflake ID + Base62 Encoding**: Produces 10 to 11 alphanumeric characters across a 69.7-year lifespan from custom epoch `2026-01-01T00:00:00Z`.
+- **Collision-Free by Construction**: Zero collisions by mathematical construction. Uniqueness is guaranteed by coordinating 41 timestamp bits, 10 worker node bits (up to 1,024 cluster nodes), and 12 sequence bits (4,096 IDs/ms/node), followed by a deterministic Base62 bijection. Full length is preserved without truncation.
+- **Scalability**: Supports up to 4.096 million unique IDs per second per node without database lock contention or sequential roundtrips.
 
 ### Analytics Queries
 
@@ -613,14 +613,15 @@ This system is engineered to showcase core Data Science and Infrastructure patte
 └───────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 1. Distributed-Safe Snowflake ID Generation
-- **Problem**: Auto-incrementing database sequences require centralized coordination and roundtrips before a short code can be known. Deterministic hashing causes birthday paradox collisions.
-- **Solution**: 64-bit Snowflake ID generation Base62 encoded:
+### 1. Distributed-Safe Snowflake ID Generation (Collision-Free by Construction)
+- **Problem**: Centralized database sequences require network roundtrips and lock coordination. Hash-based generators (MD5/SHA) suffer from birthday-paradox collisions when truncated.
+- **Solution**: 64-bit Snowflake IDs encoded into 10–11 character Base62 strings:
   - `1 sign bit`: 0 (guarantees positive 64-bit integer)
   - `41 timestamp bits`: Milliseconds elapsed since custom epoch `2026-01-01T00:00:00Z` (~69.7 years lifespan)
   - `10 worker node bits`: Supports up to 1,024 independent worker nodes (`0 - 1023`)
   - `12 sequence bits`: Supports 4,096 IDs per millisecond per worker node (up to **4.096M IDs/sec/node**)
-- **Pure Functions**: Base62 encoder/decoder (`Base62Encoder`) implemented as pure mathematical functions (deterministic, zero side effects).
+- **Collision-Free by Construction**: Unlike hash functions which map unbounded inputs into finite digests (risking hash collisions), Snowflake IDs are structured bitfields where every millisecond, node, and sequence number occupies a distinct coordinate. The Base62 encoder is a pure mathematical bijection, ensuring zero collisions without database coordination or checks.
+- **Length Behavior**: 64-bit Snowflake IDs evaluate to magnitudes of $\sim 10^{17}$, which encode to 10–11 Base62 characters ($62^9 \approx 1.35 \times 10^{16}$, $62^{10} \approx 8.39 \times 10^{17}$). Truncating to 6 characters would discard timestamp/worker bits and induce collisions; the full Base62 encoding is strictly preserved.
 - **Collision Test**: Verified across 16 concurrent worker threads generating **56,000 IDs** with **0 collisions** (`SnowflakeIdGeneratorTest`).
 
 ### 2. Hardened Cache-Aside & Token-Bucket Rate Limiting

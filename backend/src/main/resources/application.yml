@@ -84,7 +84,10 @@ app:
     worker-id: ${WORKER_NODE_ID:${APP_SNOWFLAKE_WORKER_ID:1}}
 
   short-code:
-    length: 6  # Base62 encoded short code length (supports ~56 billion URLs with 6 chars)
+    # 64-bit Snowflake IDs encode to 10-11 Base62 chars (untruncated, collision-free by construction).
+    # Preserved without truncation to protect against timestamp and worker collisions.
+    encoding: base62
+    expected-length: 10-11
   
   qr-code:
     size: 300  # QR code image size (300x300)

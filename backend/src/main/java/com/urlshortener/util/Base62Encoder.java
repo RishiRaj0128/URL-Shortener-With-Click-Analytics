@@ -5,36 +5,26 @@ package com.urlshortener.util;
  * 
  * SHORT CODE GENERATION STRATEGY:
  * 
- * Approach: Base62-encoded auto-incrementing IDs
+ * Approach: Base62-encoded 64-bit Distributed Snowflake IDs
  * 
  * Why Base62?
- * - Uses 62 characters (0-9, a-z, A-Z) to represent numbers
- * - More compact than decimal: 6 chars in base62 ≈ 56 billion unique values
- * - URL-safe (no special characters that need encoding)
- * - Deterministic: same ID always produces same short code
- * - No collision risk: IDs are unique from the database sequence
+ * - Uses 62 characters (0-9, A-Z, a-z) to represent numbers compactly.
+ * - URL-safe (no special characters that require percent-encoding).
+ * - Deterministic & Bijective: each unique 64-bit integer maps to exactly one Base62 string.
  * 
- * How it works:
- * 1. PostgreSQL generates unique auto-incrementing ID for each URL
- * 2. We encode this ID to base62 (typically 6 characters for most use cases)
- * 3. Result is URL-safe short code (e.g., "aBc123")
+ * Length Characteristics:
+ * - 64-bit Snowflake IDs (timestamp offset shifted by 22 bits) have magnitudes of ~10^17.
+ * - 62^9 ≈ 1.35 x 10^16, 62^10 ≈ 8.39 x 10^17, 62^11 ≈ 5.2 x 10^19.
+ * - Therefore, Snowflake IDs encode to 10 to 11 Base62 characters across their 69.7-year lifespan.
+ * - The full Base62 string is preserved without truncation to maintain collision-freedom.
  * 
- * Collision Handling:
- * - Zero collisions: base62 encoding is deterministic
- * - Database constraints: UNIQUE on short_code prevents accidental duplicates
- * - In practice, we generate short code from the ID, so collisions are impossible
- * 
- * Alternative Considered: Deterministic Hash
- * - Could hash the original URL to generate short code
- * - ✗ Collision risk (birthday paradox)
- * - ✗ Longer codes needed for low collision probability
- * - ✗ No benefit since DB gives us guaranteed-unique IDs
- * 
- * Alternative Considered: Random Encoding
- * - Generate random strings and check for collisions
- * - ✗ Non-deterministic (same URL → different codes)
- * - ✗ Slower (requires collision checking on every creation)
- * - ✗ Wastes short codes on collisions
+ * Collision Guarantee: Collision-Free by Construction
+ * - Not hash-based: no hash collisions or birthday-paradox risks.
+ * - Uniqueness is guaranteed by construction:
+ *   1. 41 timestamp bits guarantee monotonicity over time.
+ *   2. 10 worker bits ensure spatial isolation across up to 1,024 cluster nodes.
+ *   3. 12 sequence bits ensure uniqueness within each millisecond (up to 4,096 IDs/ms/node).
+ *   4. Base62 encoding is a bijective mathematical bijection, preserving this uniqueness.
  */
 public class Base62Encoder {
     

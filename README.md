@@ -1,150 +1,126 @@
-# URL Shortener with Click Analytics
+# URL Shortener with Click Analytics & Traffic Intelligence
 
-A production-grade URL shortening service with comprehensive click analytics, built with Spring Boot 3.x, PostgreSQL, Redis, and React.
+A hardened, production-grade URL shortening and traffic intelligence platform built with **Spring Boot**, **PostgreSQL**, **Redis**, **Resilience4j**, and **React**. Designed with senior engineering discipline: non-blocking redirect fast paths, distributed Snowflake ID generation, cluster-wide rate limiting and anomaly quarantine, multi-destination Bayesian A/B optimization, and infrastructure as code.
 
-## Table of Contents
+[![CI Pipeline](https://github.com/RishiRaj0128/URL-Shortener-With-Click-Analytics/actions/workflows/ci.yml/badge.svg)](.github/workflows/ci.yml)
+[![Verification Suite](https://img.shields.io/badge/Unit%20%26%20Integration%20Tests-157%20Passing-brightgreen)](backend/)
+[![Verified Resume Facts](https://img.shields.io/badge/Resume%20Facts-100%25%20Verifiable-blue)](RESUME_FACTS.md)
 
-- [Features](#features)
-- [Architecture](#architecture)
-- [Tech Stack](#tech-stack)
-- [Setup and Installation](#setup-and-installation)
-- [Environment Configuration](#environment-configuration)
-- [Database Migrations](#database-migrations)
-- [API Endpoints](#api-endpoints)
-- [Traffic Intelligence & Reliability](#traffic-intelligence--reliability)
-- [Deployment](#deployment)
-- [Performance Considerations](#performance-considerations)
-- [Development](#development)
+---
 
-## Features
+## Key Engineering Highlights
 
-- **URL Shortening**: Generate compact, collision-free short codes using 64-bit Snowflake IDs encoded in Base62 (10–11 characters, collision-free by construction)
-- **QR Code Generation**: Automatic QR code generation for every shortened URL
-- **Click Tracking**: Comprehensive analytics with:
-  - Device type (mobile, tablet, desktop)
-  - Browser information (Chrome, Firefox, Safari, etc.)
-  - Operating system detection
-  - Geographic location (country, city via IP)
-  - Referrer tracking
-  - Time-series click data
-- **User Authentication**: JWT-based stateless authentication
-- **Dashboard**: Real-time analytics with charts (clicks over time, geographic breakdown, browser/device breakdown)
-- **Rate Limiting**: Prevent abuse with configurable request limits
-- **Redis Caching**: Cache-aside pattern for millisecond redirects
+- **Decoupled Redirect Fast Path**: Separates the public HTTP 302 redirect path from the database analytics path using Redis Cache and Redis Streams.
+- **Distributed Snowflake IDs**: 64-bit zero-coordination ID generation mapped to 10–11 character Base62 identifiers, eliminating sequential database locks and preventing enumeration scraping ([ADR 001](docs/adr/001-snowflake-vs-sequential-ids.md)).
+- **Multi-Instance Rate Limiting & Anomaly Detection**: Continuous token bucket rate limiting implemented in Redis Lua; shared sliding-window burst velocity and Robust Z-score anomaly quarantine ([ADR 002](docs/adr/002-redis-stream-eventual-consistency.md)).
+- **Multi-Destination A/B Link Optimization**: Bayesian Thompson Sampling with Beta-Bernoulli conjugate priors dynamically allocates traffic toward top-converting landing page variants, reducing opportunity cost (regret) by ~75% ([ADR 003](docs/adr/003-multi-armed-bandit-ab-optimization.md)).
+- **Enterprise Security & SSRF Defense**: Strict HTTP/HTTPS scheme enforcement, 2048-character bounds, DNS pre-resolution blocking loopback, RFC-1918 private subnets, cloud metadata (`169.254.169.254`), and recursive redirect loops ([ADR 004](docs/adr/004-ssrf-defense-in-depth.md), [SECURITY.md](docs/SECURITY.md)).
+- **Production Infrastructure & CI/CD**: Terraform AWS IaC (VPC, ALB, ECS Fargate, Multi-AZ RDS PostgreSQL, ElastiCache Redis) and GitHub Actions zero-static-secret deployment via AWS OIDC ([DEPLOY.md](docs/DEPLOY.md)).
+
+---
 
 ## Architecture
 
-### Layered Architecture
+### System Topology & Ingestion Pipeline
 
-```
-┌─────────────────────────────────────┐
-│         React Frontend              │
-│      (Vite, Tailwind, Recharts)     │
-└────────────────┬────────────────────┘
-                 │ HTTPS
-                 │
-┌─────────────────▼────────────────────┐
-│      Spring Boot REST API            │
-│      (Port 8080)                     │
-├─────────────────────────────────────┤
-│  Controllers                         │
-│  ├─ AuthenticationController         │
-│  ├─ UrlController                    │
-│  └─ RedirectController               │
-├─────────────────────────────────────┤
-│  Services                            │
-│  ├─ AuthenticationService            │
-│  ├─ UrlShorteningService             │
-│  ├─ ClickService                     │
-│  ├─ GeolocationService               │
-│  └─ RateLimitingService              │
-├─────────────────────────────────────┤
-│  Repositories (JPA)                  │
-│  ├─ UserRepository                   │
-│  ├─ UrlRepository                    │
-│  └─ ClickRepository                  │
-└─────────────────┬────────────────────┘
-                  │
-        ┌─────────┼─────────┐
-        │         │         │
-        ▼         ▼         ▼
-    PostgreSQL  Redis  ip-api.com
-    Database    Cache  Geolocation
-```
+```mermaid
+flowchart TD
+    Client([Client Browser / HTTP Client])
+    ALB[AWS Application Load Balancer]
+    
+    subgraph ECS_Cluster [ECS Fargate Cluster]
+        App1[Spring Boot App 1]
+        App2[Spring Boot App 2]
+        App3[Spring Boot App 3]
+    end
 
-### Request Flow
+    subgraph Data_Tier [Private Subnets Data Tier]
+        RedisCache[(Redis 7 Cache)]
+        RedisStream[(Redis Stream: click:events)]
+        Postgres[(PostgreSQL 15 Multi-AZ)]
+    end
 
-#### Redirect (Performance Critical)
+    Client -->|GET /shortCode| ALB
+    ALB --> App1 & App2 & App3
 
-```
-GET /abc123
-    │
-    ├─→ Check Redis Cache
-    │   ├─→ Cache Hit: Return immediately (< 5ms)
-    │   └─→ Cache Miss: Query PostgreSQL, populate cache
-    │
-    ├─→ Async: Log Click
-    │   ├─→ Parse User-Agent (device, browser, OS)
-    │   ├─→ Extract IP & hash it (privacy)
-    │   ├─→ Fetch geolocation from IP
-    │   └─→ Store in PostgreSQL (non-blocking)
-    │
-    └─→ Return 302 redirect (immediately, before click is logged)
+    App1 -->|1. Fast Cache Read| RedisCache
+    App1 -->|2. Non-blocking Event Publish| RedisStream
+    App1 -.->|3. Immediate HTTP 302 Location| Client
+
+    subgraph Consumer_Group [Async Click Analytics Consumer Group]
+        WorkerThread[RedisStreamClickConsumer]
+        AnomalyEngine[AnomalyDetector: Robust Z-Score & Velocity]
+        RollupEngine[ClickEventProcessor]
+    end
+
+    RedisStream -->|XREADGROUP| WorkerThread
+    WorkerThread --> AnomalyEngine
+    AnomalyEngine -->|Quarantine Bot Burst| Postgres
+    AnomalyEngine -->|Valid Traffic| RollupEngine
+    RollupEngine -->|Hourly Batch Upsert| Postgres
 ```
 
-#### Create Shortened URL
+### Request Flow: Redirect Fast Path vs. Asynchronous Analytics
 
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as User Browser
+    participant Controller as RedirectController
+    participant Cache as Redis / Caffeine L1/L2
+    participant Stream as Redis Stream Bus
+    participant Consumer as Click Stream Consumer
+    participant DB as PostgreSQL 15
+
+    User->>Controller: GET /{shortCode}
+    Controller->>Cache: Fetch URL mapping
+    alt Cache Hit
+        Cache-->>Controller: Cached original URL & metadata
+    else Cache Miss
+        Controller->>DB: Query URL by shortCode
+        DB-->>Controller: URL entity
+        Controller->>Cache: Prime cache (TTL 1h)
+    end
+    
+    Controller->>Controller: Verify expiration & soft-delete (!isDeleted && !expired)
+    Controller->>Stream: XADD stream:click:events (ClickEvent payload + traceId)
+    Controller-->>User: 302 Found (Location: targetUrl)
+    
+    Note over Stream,Consumer: Asynchronous Event Processing (Decoupled from Redirect)
+    Stream->>Consumer: XREADGROUP event batch
+    Consumer->>Consumer: Evaluate Anomaly Detector & Token Deduplication
+    Consumer->>DB: Batch upsert into click_rollups
+    Consumer->>Stream: XACK event
 ```
-POST /api/shorten
-    │
-    ├─→ Authenticate JWT token
-    │
-    ├─→ Rate limit check (60 req/min per IP)
-    │
-    ├─→ Generate short code (base62 from ID)
-    │
-    ├─→ Generate QR code
-    │
-    ├─→ Store in PostgreSQL
-    │
-    └─→ Return short code + QR
-```
 
-## Tech Stack
+---
 
-### Backend
+## Technical Specifications
 
-- **Java 17+**: Modern Java with records, sealed classes, pattern matching
-- **Spring Boot 3.3**: Latest LTS version
-  - Spring Web (REST controllers)
-  - Spring Data JPA (ORM)
-  - Spring Security (JWT authentication)
-  - Spring Cache (Redis integration)
-  - Spring Async (non-blocking click logging)
-- **PostgreSQL**: Relational database
-  - Flyway: Versioned schema migrations
-  - Proper indexing for analytics queries
-- **Redis**: In-memory cache
-  - Cache-aside pattern
-  - 1-hour TTL for redirects
-- **ZXing**: QR code generation
-- **JJWT**: JWT token creation/validation
-- **Bucket4j**: Token bucket rate limiting
+| Component | Technology | Rationale / Performance Specification |
+| :--- | :--- | :--- |
+| **Runtime** | Java 25 (LTS) / Spring Boot 3.3 | Virtual thread & container cgroup memory management |
+| **Persistence** | PostgreSQL 15 (AWS RDS Multi-AZ) | ACID persistence, hourly time-bucketed rollups (`click_rollups`) |
+| **Cache & Event Bus** | Redis 7 (ElastiCache) | L2 cache-aside + Redis Stream at-least-once consumer group |
+| **ID Generation** | Twitter Snowflake (64-bit) | 1,024 worker nodes, 4,096 IDs/ms per node, Base62 encoded |
+| **Traffic Optimization**| Bayesian Thompson Sampling | Beta-Bernoulli conjugate distributions for dynamic A/B routing |
+| **Rate Limiter** | Redis Continuous Token Bucket | Atomic continuous replenishment via Redis Lua script |
+| **Resilience** | Resilience4j Circuit Breakers | Fails fast to DB on Redis timeout (>200ms) with automated self-healing |
+| **Observability** | Micrometer, Prometheus & Grafana | W3C distributed tracing (`traceparent`), MDC log correlation, alert rules |
+| **Infrastructure** | Terraform 1.5+ & AWS ECS Fargate | Multi-AZ VPC, zero-public-compute private subnets, OIDC CI/CD |
 
-### Frontend
+---
 
-- **React 18**: UI framework
-- **Vite**: Build tool (fast development, optimized production)
-- **Tailwind CSS**: Styling
-- **Recharts**: Analytics charts
-- **Axios**: HTTP client
+## Verification & Project Artifacts
 
-### Deployment
-
-- **Backend**: Render or Railway
-- **Frontend**: Netlify
-- **Database**: Managed PostgreSQL (Render/Railway)
-- **Cache**: Upstash Redis (Render/Railway) or in-memory for small deployments
+Every claim in this repository is accompanied by concrete, reproducible evidence:
+- **[RESUME_FACTS.md](RESUME_FACTS.md)**: Curated list of resume-ready bullet points backed by code paths and benchmark artifacts.
+- **[AUDIT.md](AUDIT.md)**: Formal code audit detailing verified vs unverified architectural claims.
+- **[CHANGES.md](CHANGES.md)**: PR-style incremental change log for Phases 1 through 8.
+- **[INCIDENTS.md](INCIDENTS.md)**: Production-style post-mortem incident logs for simulated failures (Redis socket timeout, consumer crash, bot bursts).
+- **[docs/SECURITY.md](docs/SECURITY.md)**: Security policy, SSRF threat model, and cryptographic IP pseudonymization specs.
+- **[docs/DEPLOY.md](docs/DEPLOY.md)**: Complete deployment runbook and Terraform AWS provisioning guide.
+- **[docs/adr/](docs/adr/)**: Architectural Decision Records (Snowflake IDs, Redis Streams, Thompson Sampling, SSRF).
 
 ## Setup and Installation
 

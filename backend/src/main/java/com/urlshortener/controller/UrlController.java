@@ -64,7 +64,7 @@ public class UrlController {
    * @param request ShortenUrlRequest with the original URL
    * @return ShortenUrlResponse with short code and QR code
    */
-  @PostMapping("/shorten")
+  @PostMapping(value = {"/shorten", "/urls"})
   public ResponseEntity<ShortenUrlResponse> shortenUrl(
       @Valid @RequestBody ShortenUrlRequest request,
       HttpServletRequest httpRequest) {

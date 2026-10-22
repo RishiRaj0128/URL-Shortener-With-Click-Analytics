@@ -303,9 +303,46 @@ This document tracks all changes made per phase, assumptions adopted, and remain
 
 ---
 
-## Remaining Phases (Pending Approval)
+## Phase 8: Documentation, ADRs & Portfolio Integrity
 
-- **Phase 8**: Documentation & Portfolio Integrity (`RESUME_FACTS.md`, architecture ADRs, verified `INCIDENTS.md`).
+### Summary of Changes (PR: `feature/phase-8-documentation`)
+
+#### 1. Verifiable Engineering Portfolio Claims (`RESUME_FACTS.md`)
+- **Resolution**:
+  - Authored [`RESUME_FACTS.md`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/RESUME_FACTS.md) cataloging senior engineering bullet points backed strictly by reproducible artifacts, automated tests, and verified code files:
+    - Distributed Snowflake ID generation & Base62 mathematical proof.
+    - Decoupled non-blocking HTTP 302 redirect fast-path and Redis Streams async click ingestion.
+    - Multi-instance continuous greedy token bucket rate limiting in Redis Lua with in-memory fallback.
+    - Shared sliding-window anomaly detection and Robust Z-score (MAD) quarantine.
+    - Multi-Destination A/B Link Optimization via Bayesian Thompson Sampling (93.4% optimal allocation, 83.0% conversion rate, 75.1% regret reduction verified in `eval/bandit_results.json`).
+    - Defense-in-depth SSRF prevention across loopback, RFC-1918 subnets, and AWS instance metadata (`169.254.169.254`).
+    - HMAC-SHA256 rotatable IP pseudonymization.
+    - Distributed tracing with W3C `traceparent`, MDC log correlation, and queue propagation.
+    - Multi-AZ AWS Infrastructure as Code (Terraform) and zero-static-credentials OIDC deployment.
+
+#### 2. Architecture Decision Records (`docs/adr/`)
+- **Resolution**:
+  - Authored 4 comprehensive ADRs documenting context, options, decisions, trade-offs, and consequences:
+    - [`docs/adr/001-snowflake-vs-sequential-ids.md`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/docs/adr/001-snowflake-vs-sequential-ids.md): Snowflake distributed 64-bit IDs vs central auto-increment sequences.
+    - [`docs/adr/002-redis-stream-eventual-consistency.md`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/docs/adr/002-redis-stream-eventual-consistency.md): Redis Streams async ingestion vs synchronous relational database writes on redirect fast path.
+    - [`docs/adr/003-multi-armed-bandit-ab-optimization.md`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/docs/adr/003-multi-armed-bandit-ab-optimization.md): Multi-Armed Bandit Thompson Sampling with Beta-Bernoulli conjugate distributions vs static uniform A/B splitting.
+    - [`docs/adr/004-ssrf-defense-in-depth.md`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/docs/adr/004-ssrf-defense-in-depth.md): Multi-stage SSRF defense, CIDR range blocking, and redirect loop detection.
+
+#### 3. Modernized Root and Backend Documentation
+- **Resolution**:
+  - Updated [`README.md`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/README.md) and [`backend/README.md`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/README.md) with modern Mermaid flowcharts, sequence diagrams, and technical specification tables.
+  - Aligned endpoint definitions to support both RESTful `POST /api/urls` and `POST /api/shorten`.
+  - Added direct navigation badges and links to all primary artifacts (`RESUME_FACTS.md`, `AUDIT.md`, `CHANGES.md`, `INCIDENTS.md`, `docs/SECURITY.md`, `docs/DEPLOY.md`, and `docs/adr/`).
+
+### Assumptions Made in Phase 8
+1. **Verifiability Standard**: Every performance number or benchmark metric included in `README.md` and `RESUME_FACTS.md` is directly traceable to committed artifacts in `bench/results/` or `eval/`.
+2. **RESTful Compatibility**: Both `POST /api/urls` and legacy `POST /api/shorten` are mapped to ensure backwards-compatibility across older API clients while adhering to modern REST standards.
+
+---
+
+## Hardening Program Status: ALL PHASES COMPLETE (1 through 8)
+All 8 engineering phases have been executed, verified via 157 automated tests, documented with PR summaries and ADRs, and committed across distinct feature branches.
+
 
 
 

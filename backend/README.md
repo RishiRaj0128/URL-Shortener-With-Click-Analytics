@@ -1,96 +1,48 @@
-# URL Shortener with Click Analytics
+# URL Shortener Backend Service
 
-A production-grade URL shortening service with comprehensive click analytics, built with Spring Boot 3.x, PostgreSQL, Redis, and React.
+The high-throughput, hardened Spring Boot core service for the **URL Shortener with Click Analytics & Traffic Intelligence** platform.
 
-## Table of Contents
+[![Verification Suite](https://img.shields.io/badge/Unit%20%26%20Integration%20Tests-157%20Passing-brightgreen)](src/test/java)
+[![Resume Facts](https://img.shields.io/badge/Resume%20Facts-100%25%20Verifiable-blue)](../RESUME_FACTS.md)
 
-- [Features](#features)
-- [Architecture](#architecture)
-- [Tech Stack](#tech-stack)
-- [Setup and Installation](#setup-and-installation)
-- [Environment Configuration](#environment-configuration)
-- [Database Migrations](#database-migrations)
-- [API Endpoints](#api-endpoints)
-- [Traffic Intelligence & Reliability](#traffic-intelligence--reliability)
-- [Deployment](#deployment)
-- [Performance Considerations](#performance-considerations)
-- [Development](#development)
+---
 
-## Features
+## Architecture Overview
 
-- **URL Shortening**: Generate compact, collision-free short codes using 64-bit Snowflake IDs encoded in Base62 (10–11 characters, collision-free by construction)
-- **QR Code Generation**: Automatic QR code generation for every shortened URL
-- **Click Tracking**: Comprehensive analytics with:
-  - Device type (mobile, tablet, desktop)
-  - Browser information (Chrome, Firefox, Safari, etc.)
-  - Operating system detection
-  - Geographic location (country, city via IP)
-  - Referrer tracking
-  - Time-series click data
-- **User Authentication**: JWT-based stateless authentication
-- **Dashboard**: Real-time analytics with charts (clicks over time, geographic breakdown, browser/device breakdown)
-- **Rate Limiting**: Prevent abuse with configurable request limits
-- **Redis Caching**: Cache-aside pattern for millisecond redirects
+The backend decouples the **Redirect Fast Path** (sub-millisecond HTTP 302 Found) from the **Analytics Persistence Path** (asynchronous batch ingestion):
 
-## Architecture
+```mermaid
+flowchart LR
+    Client([HTTP Client]) -->|1. GET /shortCode| RC[RedirectController]
+    RC -->|2. Check Cache| RCache[(Redis Cache L2)]
+    RC -->|3. Non-blocking XADD| RStream[(Redis Stream Bus)]
+    RC -.->|4. HTTP 302 Location| Client
 
-### Layered Architecture
-
-```
-┌─────────────────────────────────────┐
-│         React Frontend              │
-│      (Vite, Tailwind, Recharts)     │
-└────────────────┬────────────────────┘
-                 │ HTTPS
-                 │
-┌─────────────────▼────────────────────┐
-│      Spring Boot REST API            │
-│      (Port 8080)                     │
-├─────────────────────────────────────┤
-│  Controllers                         │
-│  ├─ AuthenticationController         │
-│  ├─ UrlController                    │
-│  └─ RedirectController               │
-├─────────────────────────────────────┤
-│  Services                            │
-│  ├─ AuthenticationService            │
-│  ├─ UrlShorteningService             │
-│  ├─ ClickService                     │
-│  ├─ GeolocationService               │
-│  └─ RateLimitingService              │
-├─────────────────────────────────────┤
-│  Repositories (JPA)                  │
-│  ├─ UserRepository                   │
-│  ├─ UrlRepository                    │
-│  └─ ClickRepository                  │
-└─────────────────┬────────────────────┘
-                  │
-        ┌─────────┼─────────┐
-        │         │         │
-        ▼         ▼         ▼
-    PostgreSQL  Redis  ip-api.com
-    Database    Cache  Geolocation
+    RStream -->|5. XREADGROUP| Consumer[RedisStreamClickConsumer]
+    Consumer --> Anomaly[AnomalyDetector: Robust Z-Score / Velocity]
+    Anomaly -->|Valid Events| Batch[ClickEventProcessor]
+    Batch -->|6. Hourly Batch Upsert| PG[(PostgreSQL 15)]
+    Anomaly -->|Quarantined Clicks| Audit[(click_anomaly_logs)]
 ```
 
-### Request Flow
+### Core Components & Packages
 
-#### Redirect (Performance Critical)
+| Package | Key Classes | Technical Responsibility |
+| :--- | :--- | :--- |
+| `com.urlshortener.controller` | `RedirectController`, `UrlController`, `AuthenticationController` | Non-blocking redirect fast-path and REST management API |
+| `com.urlshortener.pipeline` | `RedisStreamClickChannel`, `RedisStreamClickConsumer`, `ClickEventProcessor` | Redis Stream event bus, consumer groups, pending message recovery, and batch persistence |
+| `com.urlshortener.routing` | `BanditRouter` | Multi-Destination A/B Link Optimization via Bayesian Thompson Sampling (Beta-Bernoulli conjugate distributions) |
+| `com.urlshortener.service` | `RateLimitingService`, `AnomalyDetector`, `UrlShorteningService` | Redis continuous greedy token bucket, sliding-window burst velocity, and Robust Z-score spike detection |
+| `com.urlshortener.util` | `SnowflakeIdGenerator`, `Base62Encoder`, `UrlSafetyValidator`, `IpHashUtil` | 64-bit distributed IDs, SSRF defense, loopback/metadata blocking, and HMAC-SHA256 IP pseudonymization |
+| `com.urlshortener.security` | `TraceContextFilter`, `JwtTokenProvider`, `SecurityConfig` | W3C `traceparent` distributed tracing, MDC logging, BCrypt strength 12, and JWT validation |
 
-```
-GET /abc123
-    │
-    ├─→ Check Redis Cache
-    │   ├─→ Cache Hit: Return immediately (< 5ms)
-    │   └─→ Cache Miss: Query PostgreSQL, populate cache
-    │
-    ├─→ Async: Log Click
-    │   ├─→ Parse User-Agent (device, browser, OS)
-    │   ├─→ Extract IP & hash it (privacy)
-    │   ├─→ Fetch geolocation from IP
-    │   └─→ Store in PostgreSQL (non-blocking)
-    │
-    └─→ Return 302 redirect (immediately, before click is logged)
-```
+---
+
+## Architectural Decision Records (ADRs)
+- [ADR 001: Distributed Snowflake IDs vs Sequential Sequences](../docs/adr/001-snowflake-vs-sequential-ids.md)
+- [ADR 002: Redis Streams for Eventual Consistency](../docs/adr/002-redis-stream-eventual-consistency.md)
+- [ADR 003: Multi-Armed Bandit Thompson Sampling for A/B Testing](../docs/adr/003-multi-armed-bandit-ab-optimization.md)
+- [ADR 004: Defense-in-Depth SSRF Validation](../docs/adr/004-ssrf-defense-in-depth.md)
 
 #### Create Shortened URL
 

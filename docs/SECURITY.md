@@ -1,14 +1,15 @@
-# Security Architecture & Phishing Mitigation Guide
+# Security Policy & Threat Model
 
-## 1. Overview & Threat Model
+This document outlines the security controls, validation rules, threat mitigations, and known architectural limitations implemented in the **URL Shortener with Click Analytics & Traffic Intelligence** service.
 
-URL shorteners are high-value targets for malicious actors. Because shortened URLs mask destination targets behind a trusted domain, they are frequently exploited for:
-- **Phishing & Credential Harvesting**: Directing unsuspecting users to credential phishing pages using an otherwise reputable URL shortener domain.
-- **Open Redirect Exploits**: Bypassing corporate security filters, email gateways, and social network link inspectors.
-- **Server-Side Request Forgery (SSRF)**: Triggering requests against private backend infrastructure, container networks, or cloud metadata endpoints (`169.254.169.254`).
-- **Denial of Service (DoS)**: Submitting massive strings to exhaust memory/CPU buffers or creating self-referencing redirect loops.
+---
 
-This document outlines the multi-layered security controls implemented to eliminate these attack vectors.
+## 1. Threat Model & Attack Vectors
+
+As a public-facing URL redirection engine, the system is exposed to three primary threat surfaces:
+1. **Server-Side Request Forgery (SSRF) & Metadata Scraping**: Malicious actors submitting short URLs pointing to internal networks (`10.0.0.0/8`, `192.168.0.0/16`, `127.0.0.1`) or cloud instance metadata services (`169.254.169.254`) to probe internal infrastructure.
+2. **Denial of Service via Amplification & Redirect Loops**: Submitting URLs pointing back to the service itself, creating recursive redirect loops that consume server socket buffers and browser memory.
+3. **Phishing, Obfuscation & Rainbow Table IP Inversion**: Shortening links pointing to malicious or executable schemes (`javascript:`, `data:`, `file:///`), or inverting visitor IP hashes to deanonymize users.
 
 ---
 
@@ -16,17 +17,17 @@ This document outlines the multi-layered security controls implemented to elimin
 
 ### A. Strict Scheme Allowlist
 - **Rule**: Target URLs must strictly use `http://` or `https://`.
-- **Enforcement**: Evaluated via both Bean Validation regex (`^https?://...`) on [`ShortenUrlRequest`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/main/java/com/urlshortener/dto/ShortenUrlRequest.java) and programmatic URI inspection in [`UrlSafetyValidator`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/main/java/com/urlshortener/util/UrlSafetyValidator.java).
+- **Enforcement**: Evaluated via both Bean Validation regex (`^https?://...`) on [`ShortenUrlRequest`](../backend/src/main/java/com/urlshortener/dto/ShortenUrlRequest.java) and programmatic URI inspection in [`UrlSafetyValidator`](../backend/src/main/java/com/urlshortener/util/UrlSafetyValidator.java).
 - **Blocked**: Schemes such as `javascript:`, `data:`, `file:`, `ftp:`, `mailto:`, and `tel:` are rejected with `HTTP 400 Bad Request`.
 
 ### B. Maximum URL Length Bound
 - **Rule**: URLs are bounded to a maximum length of **2048 characters** (RFC 2616 / modern browser maximum URI length).
-- **Enforcement**: [`UrlSafetyValidator.java`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/main/java/com/urlshortener/util/UrlSafetyValidator.java) rejects any string exceeding 2048 characters before parsing or database persistence.
+- **Enforcement**: [`UrlSafetyValidator.java`](../backend/src/main/java/com/urlshortener/util/UrlSafetyValidator.java) rejects any string exceeding 2048 characters before parsing or database persistence.
 
 ### C. SSRF & Cloud Metadata Protection
 - **Rule**: Shortened links may never resolve to private infrastructure, loopback interfaces, or cloud metadata endpoints.
 - **Enforcement**:
-  1. **Hostname Blacklist**: Directly blocks `localhost`, `127.0.0.1`, `::1`, `0.0.0.0`, `169.254.169.254`, `metadata.google.internal`, and domains ending in `.localhost`, `.local`, `.internal`, or `.arpa`.
+  1. **Hostname Denylist**: Directly blocks `localhost`, `127.0.0.1`, `::1`, `0.0.0.0`, `169.254.169.254`, `metadata.google.internal`, and domains ending in `.localhost`, `.local`, `.internal`, or `.arpa`.
   2. **IP Resolution Checks**: Resolves target hostnames (`InetAddress.getAllByName`) and inspects the binary octets:
      - **Loopback**: `127.0.0.0/8`, `::1`
      - **Private RFC-1918**: `10.0.0.0/8`, `172.16.0.0/12` (`172.16.0.0`–`172.31.255.255`), `192.168.0.0/16`
@@ -37,7 +38,7 @@ This document outlines the multi-layered security controls implemented to elimin
 
 ### D. Self-Referencing Redirect Loop Defense
 - **Rule**: A short link cannot redirect to the URL shortener instance itself.
-- **Enforcement**: [`UrlSafetyValidator`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/main/java/com/urlshortener/util/UrlSafetyValidator.java) compares the target host and port against `app.base-url`. Matches are rejected to prevent amplification loops.
+- **Enforcement**: [`UrlSafetyValidator`](../backend/src/main/java/com/urlshortener/util/UrlSafetyValidator.java) compares the target host and port against `app.base-url`. Matches are rejected to prevent amplification loops.
 
 ### E. Custom Alias Boundaries & Reserved Keywords
 - **Format**: Restricted strictly to `^[a-zA-Z0-9_-]{3,30}$`.
@@ -52,21 +53,35 @@ This document outlines the multi-layered security controls implemented to elimin
 - **TTL Support**: Links can be created with explicit `expiresAt` timestamps or `ttlSeconds`.
 - **Soft Delete**: User deletions mark `is_deleted = true` and log `deleted_at`, preserving click history for auditing without allowing further public redirects.
 - **Cache Eviction**: Deleting a link immediately purges its entry from Redis (`@CacheEvict(value = "urls", key = "#shortCode")`).
-- **Fast-Path Safety**: If an expired or deleted link is accessed, [`RedirectController`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/main/java/com/urlshortener/controller/RedirectController.java) immediately evicts any lingering cache entry and returns `HTTP 410 Gone`.
+- **Fast-Path Safety**: If an expired or deleted link is accessed, [`RedirectController`](../backend/src/main/java/com/urlshortener/controller/RedirectController.java) immediately evicts any lingering cache entry and returns `HTTP 410 Gone`.
 
-### G. Cryptographic IP Anonymization (HMAC-SHA256)
-- Raw IP addresses are **never** stored in the database.
-- Click events are hashed using `HmacSHA256` with a server-side secret (`IP_HASH_SECRET`) and a rotatable salt (`IP_HASH_SALT`), eliminating precomputed rainbow table attacks across the 32-bit IPv4 address space while maintaining GDPR compliance.
+### G. Privacy-Preserving IP Pseudonymization (HMAC-SHA256)
+- Raw IP addresses are **never** stored in application tables.
+- Click events are hashed using `HmacSHA256` with a server-side rotatable salt (`app.security.ip-salt`, minimum 32 characters enforced on boot), protecting the 32-bit IPv4 address space against precomputed rainbow table attacks.
 
 ### H. Authentication & Password Security
-- **JWT Key Strength**: [`JwtConfiguration`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/main/java/com/urlshortener/config/JwtConfiguration.java) validates on application startup that `app.jwt.secret` is at least 256 bits (32 bytes) and rejects insecure defaults (`secret`, `changeme`, etc.).
-- **Password Hashing**: [`SecurityConfiguration`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/main/java/com/urlshortener/config/SecurityConfiguration.java) explicitly sets the BCrypt work factor to **12 rounds**, resisting brute-force offline cracking.
+- **JWT Key Strength**: [`JwtConfiguration`](../backend/src/main/java/com/urlshortener/config/JwtConfiguration.java) validates on application startup that `app.jwt.secret` is at least 256 bits (32 bytes) and rejects insecure defaults (`secret`, `changeme`, etc.).
+- **Password Hashing**: [`SecurityConfiguration`](../backend/src/main/java/com/urlshortener/config/SecurityConfiguration.java) explicitly sets the BCrypt work factor to **12 rounds**, resisting brute-force offline cracking.
 
 ---
 
-## 3. Operational Takedown & Phishing Workflow
+## 3. Known Security Limitations & Operational Boundaries
+
+1. **DNS Rebinding Vulnerability in Validate-at-Create Checks**:
+   - The SSRF protection verifies hostnames and IP addresses during link creation (`POST /api/urls`). An adversary could configure a DNS record with a low TTL (e.g. 1 second) that initially points to a benign public IP address (`8.8.8.8`) to pass create-time validation, then immediately rebinds the DNS record to an internal IP (`169.254.169.254` or `127.0.0.1`).
+   - *Mitigation in Production*: In an HTTP 302 redirect shortener, the client browser follows the redirect, not the shortener server. However, for features that scrape target metadata or generate link previews, validation must be re-evaluated at fetch time via a forward proxy with egress firewall rules.
+
+2. **Distinct-Visitor Continuity on Salt Rotation**:
+   - Rotating `app.security.ip-salt` is a security best practice that prevents long-term correlation attacks. However, changing the salt resets historical distinct-visitor linkage: subsequent clicks from the same visitor will produce a different hash and appear as a new visitor in analytics dashboards.
+
+3. **Ingress Web Server Access Logs**:
+   - While application databases store only HMAC-pseudonymized IP hashes, upstream reverse proxies (Nginx or AWS Application Load Balancers) record raw client IP addresses in their HTTP access logs (`$remote_addr`) by default. Full GDPR compliance requires configuring Nginx log filtering (e.g. `set $anonymized_ip ...` or disabling raw access logging).
+
+---
+
+## 4. Operational Takedown & Phishing Workflow
 
 If an abusive or phishing URL is reported:
-1. **Immediate API Invalidation**: Calling `DELETE /api/urls/{shortCode}` immediately marks the link as deleted in PostgreSQL and triggers instant Redis cache eviction.
-2. **Fast-Path Rejection**: Subsequent redirect requests receive `HTTP 410 Gone`.
-3. **Forensic Audit**: The `clicks` and `click_event_dedup` tables retain hashed IP audit trails to measure how many users were targeted prior to takedown without violating user privacy.
+1. **Immediate API Invalidation**: Calling `DELETE /api/urls/{shortCode}` marks the link as deleted in PostgreSQL and triggers instant Redis cache eviction.
+2. **Fast-Path Rejection**: Subsequent redirect requests immediately receive `HTTP 410 Gone`.
+3. **Forensic Audit**: The `clicks` and `click_event_dedup` tables retain hashed IP audit trails to measure how many users were targeted prior to takedown without exposing visitor identity.

@@ -1,344 +1,137 @@
 {
   "thompsonResult": {
     "strategyName": "Thompson Sampling (Bayesian Beta-Bernoulli)",
-    "trials": 2000,
-    "totalSuccesses": 1659,
-    "overallSuccessRate": 82.95,
-    "optimalPulls": 1868,
-    "optimalShare": 93.4,
-    "cumulativeRegret": 23.4,
-    "stats": {
-      "Variant-A (Lander V1)": {
-        "pulls": 1868,
-        "successes": 1564,
-        "failures": 304,
-        "alpha": 1565,
-        "beta": 305
-      },
-      "Variant-B (Lander V2)": {
-        "pulls": 114,
-        "successes": 85,
-        "failures": 29,
-        "alpha": 86,
-        "beta": 30
-      },
-      "Variant-C (Lander V3)": {
-        "pulls": 18,
-        "successes": 10,
-        "failures": 8,
-        "alpha": 11,
-        "beta": 9
+    "numSeeds": 50,
+    "trialsPerSeed": 2000,
+    "meanSuccesses": 1692.5,
+    "stdSuccesses": 13.7,
+    "meanSuccessRate": 84.62,
+    "stdSuccessRate": 0.69,
+    "meanOptimalShare": 96.95,
+    "stdOptimalShare": 2.1,
+    "meanOptimalPulls": 1938.9,
+    "stdOptimalPulls": 42,
+    "meanCumulativeRegret": 11.7,
+    "stdCumulativeRegret": 6.94,
+    "sampleRun": {
+      "totalSuccesses": 1682,
+      "overallSuccessRate": 84.1,
+      "optimalPulls": 1835,
+      "optimalShare": 91.75,
+      "cumulativeRegret": 26.55,
+      "stats": {
+        "Variant-A (Lander V1)": {
+          "pulls": 1835,
+          "successes": 1561,
+          "failures": 274,
+          "alpha": 1562,
+          "beta": 275
+        },
+        "Variant-B (Lander V2)": {
+          "pulls": 156,
+          "successes": 118,
+          "failures": 38,
+          "alpha": 119,
+          "beta": 39
+        },
+        "Variant-C (Lander V3)": {
+          "pulls": 9,
+          "successes": 3,
+          "failures": 6,
+          "alpha": 4,
+          "beta": 7
+        }
       }
-    },
-    "regretHistory": [
-      {
-        "trial": 100,
-        "cumulativeRegret": 5.1
-      },
-      {
-        "trial": 200,
-        "cumulativeRegret": 5.85
-      },
-      {
-        "trial": 300,
-        "cumulativeRegret": 6.6
-      },
-      {
-        "trial": 400,
-        "cumulativeRegret": 7.2
-      },
-      {
-        "trial": 500,
-        "cumulativeRegret": 7.8
-      },
-      {
-        "trial": 600,
-        "cumulativeRegret": 8.85
-      },
-      {
-        "trial": 700,
-        "cumulativeRegret": 10.5
-      },
-      {
-        "trial": 800,
-        "cumulativeRegret": 11.75
-      },
-      {
-        "trial": 900,
-        "cumulativeRegret": 12.35
-      },
-      {
-        "trial": 1000,
-        "cumulativeRegret": 13.7
-      },
-      {
-        "trial": 1100,
-        "cumulativeRegret": 15.4
-      },
-      {
-        "trial": 1200,
-        "cumulativeRegret": 17.1
-      },
-      {
-        "trial": 1300,
-        "cumulativeRegret": 19.05
-      },
-      {
-        "trial": 1400,
-        "cumulativeRegret": 21.3
-      },
-      {
-        "trial": 1500,
-        "cumulativeRegret": 22.45
-      },
-      {
-        "trial": 1600,
-        "cumulativeRegret": 22.95
-      },
-      {
-        "trial": 1700,
-        "cumulativeRegret": 23.25
-      },
-      {
-        "trial": 1800,
-        "cumulativeRegret": 23.4
-      },
-      {
-        "trial": 1900,
-        "cumulativeRegret": 23.4
-      },
-      {
-        "trial": 2000,
-        "cumulativeRegret": 23.4
-      }
-    ]
+    }
   },
   "epsilonResult": {
     "strategyName": "Epsilon-Greedy (epsilon = 0.10)",
-    "trials": 2000,
-    "totalSuccesses": 1628,
-    "overallSuccessRate": 81.4,
-    "optimalPulls": 1843,
-    "optimalShare": 92.15,
-    "cumulativeRegret": 38.55,
-    "stats": {
-      "Variant-A (Lander V1)": {
-        "pulls": 1843,
-        "successes": 1540,
-        "failures": 303,
-        "alpha": 1,
-        "beta": 1
-      },
-      "Variant-B (Lander V2)": {
-        "pulls": 82,
-        "successes": 59,
-        "failures": 23,
-        "alpha": 1,
-        "beta": 1
-      },
-      "Variant-C (Lander V3)": {
-        "pulls": 75,
-        "successes": 29,
-        "failures": 46,
-        "alpha": 1,
-        "beta": 1
+    "numSeeds": 50,
+    "trialsPerSeed": 2000,
+    "meanSuccesses": 1659.3,
+    "stdSuccesses": 26.2,
+    "meanSuccessRate": 82.96,
+    "stdSuccessRate": 1.31,
+    "meanOptimalShare": 91.01,
+    "stdOptimalShare": 5.29,
+    "meanOptimalPulls": 1820.2,
+    "stdOptimalPulls": 105.9,
+    "meanCumulativeRegret": 40.99,
+    "stdCumulativeRegret": 16.42,
+    "sampleRun": {
+      "totalSuccesses": 1618,
+      "overallSuccessRate": 80.9,
+      "optimalPulls": 1668,
+      "optimalShare": 83.39999999999999,
+      "cumulativeRegret": 62.8,
+      "stats": {
+        "Variant-A (Lander V1)": {
+          "pulls": 1668,
+          "successes": 1392,
+          "failures": 276,
+          "alpha": 1,
+          "beta": 1
+        },
+        "Variant-B (Lander V2)": {
+          "pulls": 267,
+          "successes": 195,
+          "failures": 72,
+          "alpha": 1,
+          "beta": 1
+        },
+        "Variant-C (Lander V3)": {
+          "pulls": 65,
+          "successes": 31,
+          "failures": 34,
+          "alpha": 1,
+          "beta": 1
+        }
       }
-    },
-    "regretHistory": [
-      {
-        "trial": 100,
-        "cumulativeRegret": 1.85
-      },
-      {
-        "trial": 200,
-        "cumulativeRegret": 3.95
-      },
-      {
-        "trial": 300,
-        "cumulativeRegret": 6
-      },
-      {
-        "trial": 400,
-        "cumulativeRegret": 7.8
-      },
-      {
-        "trial": 500,
-        "cumulativeRegret": 10.95
-      },
-      {
-        "trial": 600,
-        "cumulativeRegret": 12.1
-      },
-      {
-        "trial": 700,
-        "cumulativeRegret": 14.3
-      },
-      {
-        "trial": 800,
-        "cumulativeRegret": 15.6
-      },
-      {
-        "trial": 900,
-        "cumulativeRegret": 17.25
-      },
-      {
-        "trial": 1000,
-        "cumulativeRegret": 19.4
-      },
-      {
-        "trial": 1100,
-        "cumulativeRegret": 22.1
-      },
-      {
-        "trial": 1200,
-        "cumulativeRegret": 23.45
-      },
-      {
-        "trial": 1300,
-        "cumulativeRegret": 25.6
-      },
-      {
-        "trial": 1400,
-        "cumulativeRegret": 26.55
-      },
-      {
-        "trial": 1500,
-        "cumulativeRegret": 27.7
-      },
-      {
-        "trial": 1600,
-        "cumulativeRegret": 30.1
-      },
-      {
-        "trial": 1700,
-        "cumulativeRegret": 32.95
-      },
-      {
-        "trial": 1800,
-        "cumulativeRegret": 34.8
-      },
-      {
-        "trial": 1900,
-        "cumulativeRegret": 36.25
-      },
-      {
-        "trial": 2000,
-        "cumulativeRegret": 38.55
-      }
-    ]
+    }
   },
   "randomResult": {
-    "strategyName": "Uniform Random (No Learning Baseline)",
-    "trials": 2000,
-    "totalSuccesses": 1384,
-    "overallSuccessRate": 69.2,
-    "optimalPulls": 688,
-    "optimalShare": 34.4,
-    "cumulativeRegret": 322.2,
-    "stats": {
-      "Variant-A (Lander V1)": {
-        "pulls": 688,
-        "successes": 599,
-        "failures": 89,
-        "alpha": 1,
-        "beta": 1
-      },
-      "Variant-B (Lander V2)": {
-        "pulls": 685,
-        "successes": 466,
-        "failures": 219,
-        "alpha": 1,
-        "beta": 1
-      },
-      "Variant-C (Lander V3)": {
-        "pulls": 627,
-        "successes": 319,
-        "failures": 308,
-        "alpha": 1,
-        "beta": 1
+    "strategyName": "Uniform Random (Baseline)",
+    "numSeeds": 50,
+    "trialsPerSeed": 2000,
+    "meanSuccesses": 1374.4,
+    "stdSuccesses": 19.6,
+    "meanSuccessRate": 68.72,
+    "stdSuccessRate": 0.98,
+    "meanOptimalShare": 33.31,
+    "stdOptimalShare": 1.12,
+    "meanOptimalPulls": 666.1,
+    "stdOptimalPulls": 22.3,
+    "meanCumulativeRegret": 332.81,
+    "stdCumulativeRegret": 6.61,
+    "sampleRun": {
+      "totalSuccesses": 1366,
+      "overallSuccessRate": 68.30000000000001,
+      "optimalPulls": 668,
+      "optimalShare": 33.4,
+      "cumulativeRegret": 329.8,
+      "stats": {
+        "Variant-A (Lander V1)": {
+          "pulls": 668,
+          "successes": 560,
+          "failures": 108,
+          "alpha": 1,
+          "beta": 1
+        },
+        "Variant-B (Lander V2)": {
+          "pulls": 682,
+          "successes": 492,
+          "failures": 190,
+          "alpha": 1,
+          "beta": 1
+        },
+        "Variant-C (Lander V3)": {
+          "pulls": 650,
+          "successes": 314,
+          "failures": 336,
+          "alpha": 1,
+          "beta": 1
+        }
       }
-    },
-    "regretHistory": [
-      {
-        "trial": 100,
-        "cumulativeRegret": 15.1
-      },
-      {
-        "trial": 200,
-        "cumulativeRegret": 31.65
-      },
-      {
-        "trial": 300,
-        "cumulativeRegret": 46
-      },
-      {
-        "trial": 400,
-        "cumulativeRegret": 62.2
-      },
-      {
-        "trial": 500,
-        "cumulativeRegret": 79.15
-      },
-      {
-        "trial": 600,
-        "cumulativeRegret": 94.7
-      },
-      {
-        "trial": 700,
-        "cumulativeRegret": 110.35
-      },
-      {
-        "trial": 800,
-        "cumulativeRegret": 122.8
-      },
-      {
-        "trial": 900,
-        "cumulativeRegret": 139.9
-      },
-      {
-        "trial": 1000,
-        "cumulativeRegret": 153.65
-      },
-      {
-        "trial": 1100,
-        "cumulativeRegret": 168.5
-      },
-      {
-        "trial": 1200,
-        "cumulativeRegret": 186.35
-      },
-      {
-        "trial": 1300,
-        "cumulativeRegret": 205.5
-      },
-      {
-        "trial": 1400,
-        "cumulativeRegret": 219.95
-      },
-      {
-        "trial": 1500,
-        "cumulativeRegret": 237.1
-      },
-      {
-        "trial": 1600,
-        "cumulativeRegret": 253.15
-      },
-      {
-        "trial": 1700,
-        "cumulativeRegret": 270.2
-      },
-      {
-        "trial": 1800,
-        "cumulativeRegret": 286.2
-      },
-      {
-        "trial": 1900,
-        "cumulativeRegret": 306.25
-      },
-      {
-        "trial": 2000,
-        "cumulativeRegret": 322.2
-      }
-    ]
+    }
   }
 }

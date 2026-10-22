@@ -5,7 +5,7 @@
 > **Honest Architecture Boundary**:
 > In standard production environments, reverse proxying and ingress load balancing across backend application containers is managed by dedicated infrastructure tiers (e.g. AWS Application Load Balancer, Nginx upstream pools, or Kubernetes Envoy ingress controllers).
 > 
-> The in-process routing classes ([`TrafficRouter.java`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/main/java/com/urlshortener/routing/TrafficRouter.java) and [`EwmaNodeScorer.java`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/main/java/com/urlshortener/routing/EwmaNodeScorer.java)) exist in the codebase as an **algorithmic prototype for client-side adaptive load balancing**, useful for local single-process simulations and dashboard visualization.
+> The in-process routing classes ([`TrafficRouter.java`](../../backend/src/main/java/com/urlshortener/routing/TrafficRouter.java) and [`EwmaNodeScorer.java`](../../backend/src/main/java/com/urlshortener/routing/EwmaNodeScorer.java)) exist in the codebase as an **algorithmic prototype for client-side adaptive load balancing**, useful for local single-process simulations and dashboard visualization.
 
 ---
 
@@ -40,5 +40,5 @@ Lower cost nodes receive higher probabilistic traffic weights during selection.
 ## 4. Test Verification
 
 The algorithmic behavior is validated by:
-- [`backend/src/test/java/com/urlshortener/routing/EwmaNodeScorerTest.java`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/test/java/com/urlshortener/routing/EwmaNodeScorerTest.java): Tests smoothing convergence, penalty multipliers, and time constant calculations.
-- [`backend/src/test/java/com/urlshortener/routing/TrafficRouterFailoverTest.java`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/test/java/com/urlshortener/routing/TrafficRouterFailoverTest.java): Tests staged shedding and slow-start warmup ramps.
+- [`backend/src/test/java/com/urlshortener/routing/EwmaNodeScorerTest.java`](../../backend/src/test/java/com/urlshortener/routing/EwmaNodeScorerTest.java): Tests smoothing convergence, penalty multipliers, and time constant calculations.
+- [`backend/src/test/java/com/urlshortener/routing/TrafficRouterFailoverTest.java`](../../backend/src/test/java/com/urlshortener/routing/TrafficRouterFailoverTest.java): Tests staged shedding and slow-start warmup ramps.

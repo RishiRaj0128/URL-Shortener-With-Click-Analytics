@@ -1,48 +1,31 @@
 # Multi-Armed Bandit (MAB) Multi-Destination A/B Link Optimization Report
 
-> **Target Scenario**: Dynamic A/B conversion optimization across 3 destination landing page variants with uncertain conversion rates.
-> - **Variant A (Lander V1)**: Ground truth conversion rate $p = 0.85$ (Optimal)
-> - **Variant B (Lander V2)**: Ground truth conversion rate $p = 0.70$
-> - **Variant C (Lander V3)**: Ground truth conversion rate $p = 0.50$
-> - **Horizon**: 2,000 visitors/redirects per routing strategy.
+> **Methodology**: Evaluated across **50 independent Monte Carlo seeds** (2,000 visitors/redirects per seed, 100,000 total simulated interactions per strategy).
+> **Target Scenario**: Dynamic A/B conversion optimization across 3 destination landing page variants with preset ground truth conversion rates:
+> - **Variant A (Lander V1)**: $p = 0.85$ (Optimal)
+> - **Variant B (Lander V2)**: $p = 0.70$
+> - **Variant C (Lander V3)**: $p = 0.50$
+> - **Prior**: Uniform uninformative $\text{Beta}(1, 1)$.
 
 ---
 
-## 1. Measured Performance Comparison
+## 1. Measured Multi-Seed Simulation Performance (Mean ± Std over 50 Seeds)
 
-| Routing Algorithm | Total Redirects | Total Conversions | Overall Conversion Rate | Optimal Variant Allocation (V1) | Cumulative Regret ($T \cdot \mu^* - \sum r_t$) |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **Thompson Sampling (Bayesian Beta-Bernoulli)** | 2,000 | **1659** | **82.95%** | **93.4%** (1868 / 2,000) | **23.4** |
-| **Epsilon-Greedy ($\epsilon = 0.10$)** | 2,000 | 1628 | 81.4% | 92.15% (1843 / 2,000) | 38.55 |
-| **Uniform Random (Baseline)** | 2,000 | 1384 | 69.2% | 34.4% (688 / 2,000) | 322.2 |
-
----
-
-## 2. Per-Variant Breakdown
-
-### A. Thompson Sampling Allocations
-- **Variant-A (Lander V1)**: 1868 routed (93.4%), 1564 conversions (83.7% empirical) | $\alpha=1565, \beta=305$
-- **Variant-B (Lander V2)**: 114 routed (5.7%), 85 conversions (74.6% empirical) | $\alpha=86, \beta=30$
-- **Variant-C (Lander V3)**: 18 routed (0.9%), 10 conversions (55.6% empirical) | $\alpha=11, \beta=9$
-
-### B. Epsilon-Greedy Allocations
-- **Variant-A (Lander V1)**: 1843 routed (92.2%), 1540 conversions (83.6% empirical)
-- **Variant-B (Lander V2)**: 82 routed (4.1%), 59 conversions (72.0% empirical)
-- **Variant-C (Lander V3)**: 75 routed (3.8%), 29 conversions (38.7% empirical)
-
-### C. Uniform Random Allocations
-- **Variant-A (Lander V1)**: 688 routed (34.4%), 599 conversions (87.1% empirical)
-- **Variant-B (Lander V2)**: 685 routed (34.3%), 466 conversions (68.0% empirical)
-- **Variant-C (Lander V3)**: 627 routed (31.4%), 319 conversions (50.9% empirical)
+| Routing Strategy | Total Clicks / Seed | Mean Conversions (Mean ± Std) | Mean Conversion Rate | Optimal Variant Allocation (V1) | Cumulative Regret ($T \cdot \mu^* - \sum r_t$) |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Thompson Sampling (Bayesian Beta-Bernoulli)** | 2,000 | **1692.5 ± 13.7** | **84.62 ± 0.69%** | **96.95 ± 2.1%** (1938.9 / 2,000) | **11.7 ± 6.94** |
+| **Epsilon-Greedy ($\epsilon = 0.10$)** | 2,000 | 1659.3 ± 26.2 | 82.96 ± 1.31% | 91.01 ± 5.29% (1820.2 / 2,000) | 40.99 ± 16.42 |
+| **Uniform Random (Baseline)** | 2,000 | 1374.4 ± 19.6 | 68.72 ± 0.98% | 33.31 ± 1.12% (666.1 / 2,000) | 332.81 ± 6.61 |
 
 ---
 
-## 3. Engineering Analysis & Discussion
+## 2. Engineering Findings & Honest Discussion
 
-1. **Why Thompson Sampling Outperforms Epsilon-Greedy**:
-   - Epsilon-greedy commits a fixed 10% tax ($epsilon = 0.10$) to random exploratory traffic forever, even long after Variant A is proven superior with high statistical confidence.
-   - Thompson Sampling naturally reduces exploration as posterior distributions concentrate ($alpha + eta$ grows), achieving **logarithmic asymptotic regret** $O(\log T)$ instead of linear regret $O(T \epsilon)$.
-2. **Exploration vs Exploitation Tradeoff**:
-   - Thompson Sampling allows continuous adaptation: if an underperforming landing page is updated and begins converting better, samples from wider distributions will occasionally draw high $\theta$ values, giving updated variants traffic without manual intervention.
-3. **Execution Latency**:
-   - Marsaglia & Tsang Gamma generator computes Beta samples in $< 0.002$ ms in pure Java/JS, making it viable on high-throughput redirect paths.
+1. **Simulation Bounds & Assumptions**:
+   - These numbers represent an in-silico Monte Carlo simulation with stationary conversion probabilities ($0.85, 0.70, 0.50$).
+   - In production environments, conversion feedback is delayed (visitors convert hours or days after click), and conversion rates may experience non-stationary drift.
+2. **Regret Comparison**:
+   - Thompson Sampling achieved a mean cumulative regret of **11.7**, compared to **332.81** under static uniform splitting (**96.5% regret reduction in simulation**).
+   - Epsilon-greedy incurs a constant linear regret penalty due to persistent random exploration even after statistical convergence.
+3. **Algorithmic Overhead**:
+   - The Marsaglia & Tsang Beta sampler executes in $< 2\mu\text{s}$ per decision, keeping routing overhead well below the network RTT.

@@ -11,18 +11,24 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.DoubleAdder;
 
 /**
- * Multi-Armed Bandit (MAB) Router for Multi-Destination Links and Payment Gateways.
+ * Multi-Armed Bandit (MAB) Router for Multi-Destination A/B Link Optimization.
+ * 
+ * Supports dynamically routing traffic across 2 to 5 destination variants (landing pages)
+ * to maximize conversion rates while balancing exploration vs exploitation.
  * 
  * Features:
  * - Thompson Sampling: Bayesian Beta-Bernoulli conjugate model sampling theta ~ Beta(alpha, beta).
  * - Epsilon-Greedy: Selectable exploration vs exploitation mode.
- * - Real-Time Feedback Loop: Dynamically adjusts routing distribution based on transaction success/failure.
+ * - Real-Time Conversion Feedback Loop: Dynamically adjusts routing distribution based on conversion callbacks.
  * - Pure Mathematical Gamma/Beta Sampling: Zero external math dependencies.
  */
 @Component
 public class BanditRouter {
 
     private static final Logger log = LoggerFactory.getLogger(BanditRouter.class);
+
+    public static final int MIN_DESTINATIONS = 2;
+    public static final int MAX_DESTINATIONS = 5;
 
     public enum Strategy {
         THOMPSON_SAMPLING,
@@ -72,16 +78,20 @@ public class BanditRouter {
     }
 
     /**
-     * Registers a candidate destination arm for a given route/campaign key.
+     * Registers a candidate destination variant for a given campaign/route key.
+     * Enforces an upper limit of 5 destinations per campaign.
      */
     public void registerDestination(String routeKey, String destinationId, String targetUrl) {
-        routes.computeIfAbsent(routeKey, k -> new ConcurrentHashMap<>())
-            .put(destinationId, new DestinationArm(destinationId, targetUrl));
-        log.debug("Registered bandit arm '{}' ({}) for route '{}'", destinationId, targetUrl, routeKey);
+        Map<String, DestinationArm> arms = routes.computeIfAbsent(routeKey, k -> new ConcurrentHashMap<>());
+        if (arms.size() >= MAX_DESTINATIONS && !arms.containsKey(destinationId)) {
+            throw new IllegalArgumentException("Maximum of " + MAX_DESTINATIONS + " destination variants allowed per campaign");
+        }
+        arms.put(destinationId, new DestinationArm(destinationId, targetUrl));
+        log.debug("Registered destination variant '{}' ({}) for campaign '{}'", destinationId, targetUrl, routeKey);
     }
 
     /**
-     * Intelligently selects the destination arm for the given route key
+     * Selects a destination variant for the given campaign key
      * according to the configured Bandit strategy (Thompson Sampling or Epsilon-Greedy).
      */
     public Optional<String> selectDestination(String routeKey) {
@@ -129,7 +139,7 @@ public class BanditRouter {
             return arms.get(idx).destinationId;
         }
 
-        // Exploit arm with highest empirical success rate
+        // Exploit arm with highest empirical conversion rate
         DestinationArm bestArm = arms.get(0);
         double highestRate = -1.0;
 
@@ -145,7 +155,14 @@ public class BanditRouter {
     }
 
     /**
-     * Records transaction/routing feedback (success or failure) to update the arm's posterior.
+     * Records a conversion callback event (conversion success or bounce/failure) to update the variant's posterior.
+     */
+    public void recordConversion(String routeKey, String destinationId, boolean converted, double latencyMs) {
+        recordOutcome(routeKey, destinationId, converted, latencyMs);
+    }
+
+    /**
+     * Records routing feedback (conversion or trial failure) to update the variant's posterior.
      */
     public void recordOutcome(String routeKey, String destinationId, boolean success, double latencyMs) {
         Map<String, DestinationArm> arms = routes.get(routeKey);
@@ -155,12 +172,12 @@ public class BanditRouter {
         if (arm == null) return;
 
         arm.recordOutcome(success, latencyMs);
-        log.debug("Recorded outcome for route '{}', arm '{}': success={}, alpha={:.1f}, beta={:.1f}",
+        log.debug("Recorded conversion feedback for campaign '{}', variant '{}': converted={}, alpha={:.1f}, beta={:.1f}",
             routeKey, destinationId, success, arm.getAlpha(), arm.getBeta());
     }
 
     /**
-     * Returns statistical observability data for all arms of a given route.
+     * Returns statistical observability data for all variants of a given campaign.
      */
     public List<DestinationStats> getRouteStats(String routeKey) {
         Map<String, DestinationArm> arms = routes.get(routeKey);
@@ -208,7 +225,6 @@ public class BanditRouter {
         ThreadLocalRandom rand = ThreadLocalRandom.current();
 
         if (k < 1.0) {
-            // Johnk's generator or Marsaglia scaling for k < 1
             double u = rand.nextDouble();
             return sampleGamma(k + 1.0) * Math.pow(u, 1.0 / k);
         }

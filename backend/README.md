@@ -713,32 +713,22 @@ This system is engineered to showcase core Data Science and Infrastructure patte
     - 2 consecutive failures: $0\%$ (quarantined to probe-only).
   - **Slow-Start Warm-up Ramp**: Solves the **Cold JVM Problem** (cold JIT compiler, empty local caches, unprimed pools). When an unhealthy node recovers, sending 100% traffic immediately triggers CPU spikes and immediate re-tripping into failure. Recovered nodes enter a slow-start ramp:
     $$\text{Stage 1: } 10\% \longrightarrow \text{Stage 2: } 25\% \longrightarrow \text{Stage 3: } 50\% \longrightarrow \text{Stage 4: } 100\%$$
-- **Multi-Armed Bandit Routing (`BanditRouter`) for Multi-Destination Links & Payment Gateways**:
-  - Built for multi-destination routing (e.g., routing checkout traffic dynamically across candidate payment gateways like HDFC, ICICI, Axis).
-  - **Thompson Sampling (Bayesian Beta-Bernoulli)**: Maintains Beta posterior $\text{Beta}(\alpha_i, \beta_i)$ per gateway ($\alpha = 1 + \text{successes}$, $\beta = 1 + \text{failures}$). Samples $\theta_i \sim \text{Beta}(\alpha_i, \beta_i)$ in pure code using Marsaglia & Tsang Gamma variates, selecting $\arg\max_i \theta_i$. Achieves optimal $O(\log T)$ logarithmic regret.
+- **Multi-Armed Bandit Routing (`BanditRouter`) for Multi-Destination A/B Link Optimization**:
+  - Designed for dynamic conversion rate optimization across 2–5 destination landing page variants (e.g. promotional landing variants V1, V2, V3).
+  - **Thompson Sampling (Bayesian Beta-Bernoulli)**: Maintains Beta posterior $\text{Beta}(\alpha_i, \beta_i)$ per destination variant ($\alpha = 1 + \text{conversions}$, $\beta = 1 + \text{bounces}$). Samples $\theta_i \sim \text{Beta}(\alpha_i, \beta_i)$ in pure Java/JS using Marsaglia & Tsang Gamma variates, selecting $\arg\max_i \theta_i$. Achieves optimal $O(\log T)$ logarithmic regret.
   - **Epsilon-Greedy**: Configurable exploration ($\epsilon$, e.g. 10%) with greedy exploitation.
-  - **Empirical Simulation Results (2,000 Transactions in [`eval/BANDIT_REPORT.md`](../eval/BANDIT_REPORT.md))**:
-    - **Thompson Sampling**: **97.9%** optimal gateway allocation, **85.3%** conversion rate, **8.3** cumulative regret.
-    - **Epsilon-Greedy ($\epsilon=0.10$)**: **93.3%** optimal gateway allocation, **82.5%** conversion rate, **33.9** cumulative regret.
-    - **Uniform Random (Baseline)**: **32.5%** optimal gateway allocation, **66.8%** conversion rate, **348.9** cumulative regret.
+  - **Empirical Simulation Results (2,000 Visitors in [`eval/BANDIT_REPORT.md`](../eval/BANDIT_REPORT.md))**:
+    - **Thompson Sampling**: **93.4%** optimal variant allocation, **83.0%** conversion rate, **23.4** cumulative regret.
+    - **Epsilon-Greedy ($\epsilon=0.10$)**: **92.2%** optimal variant allocation, **81.4%** conversion rate, **38.6** cumulative regret.
+    - **Uniform Random (Baseline)**: **34.4%** optimal variant allocation, **69.2%** conversion rate, **322.2** cumulative regret.
 - **Multi-Node Cluster Deployment & Verified Failover**:
   - **Cluster Architecture**: Orchestrated via [`docker-compose.yml`](../docker-compose.yml) running 3 app replicas (ports: `8081, 8082, 8083`, distinct Snowflake worker IDs: `1, 2, 3`), single-instance Redis, single-instance Postgres, and an Nginx reverse proxy router ([`router/nginx.conf`](../router/nginx.conf)).
   - **Passive Health Checking**: Operating under Nginx OSS with passive health checks (`max_fails=1 fail_timeout=5s`) and upstream retry (`proxy_next_upstream error timeout http_500 http_502 http_503 http_504`, `proxy_connect_timeout 150ms`).
   - **Multi-Run Failover Verification**: Codified in [`bench/failover_multi_runner.mjs`](../bench/failover_multi_runner.mjs). Verified across 5 consecutive runs with node rotation (`node-1` → `node-2` → `node-3` → `node-1` → `node-2`) under 15 VUs load, achieving **0.00% error rate** across 15,000+ requests, strictly meeting the test acceptance threshold (**< 2.0%**).
-  - **Snowflake Worker ID Uniqueness**: Verified across all 3 containers with zero collisions via [`bench/test_cluster_snowflake.mjs`](../bench/test_cluster_snowflake.mjs).text{Stage 1: } 10\% \longrightarrow \text{Stage 2: } 25\% \longrightarrow \text{Stage 3: } 50\% \longrightarrow \text{Stage 4: } 100\%$$
-- **Multi-Armed Bandit Routing (`BanditRouter`) for Multi-Destination Links & Payment Gateways**:
-  - Built for multi-destination routing (e.g., routing checkout traffic dynamically across candidate payment gateways like HDFC, ICICI, Axis).
-  - **Thompson Sampling (Bayesian Beta-Bernoulli)**: Maintains Beta posterior $\text{Beta}(\alpha_i, \beta_i)$ per gateway ($\alpha = 1 + \text{successes}$, $\beta = 1 + \text{failures}$). Samples $\theta_i \sim \text{Beta}(\alpha_i, \beta_i)$ in $< 0.002$ ms using Marsaglia & Tsang Gamma variates, selecting $\arg\max_i \theta_i$. Achieves optimal $O(\log T)$ logarithmic regret.
-  - **Epsilon-Greedy**: Configurable exploration ($\epsilon$, e.g. 10%) with greedy exploitation.
-  - **Empirical Simulation Results (2,000 Transactions in [`eval/BANDIT_REPORT.md`](../eval/BANDIT_REPORT.md))**:
-    - **Thompson Sampling**: **97.9%** optimal gateway allocation, **85.3%** conversion rate, **8.3** cumulative regret.
-    - **Epsilon-Greedy ($\epsilon=0.10$)**: **93.3%** optimal gateway allocation, **82.5%** conversion rate, **33.9** cumulative regret.
-    - **Uniform Random (Baseline)**: **32.5%** optimal gateway allocation, **66.8%** conversion rate, **348.9** cumulative regret.
-- **Intelligent Traffic Routing Status: Designed For, Not Fully Deployed**:
-  - **Architecture**: A multi-node cluster topology is scripted in [`docker-compose.yml`](../docker-compose.yml) running 3 app replicas (different ports, distinct Snowflake worker IDs: `1, 2, 3`), Redis, Postgres, and an Nginx reverse proxy router ([`router/nginx.conf`](../router/nginx.conf)).
-  - **Dynamic Failover Specification**: Nginx upstream configured with `max_fails=2 fail_timeout=5s` and `proxy_next_upstream error timeout http_502 http_503 http_504`. If an active node crashes, requests are transparently retried against healthy replicas within a 2-second timeout window.
-  - **Automated Failover Drill**: A scripted k6 failover test ([`bench/failover_test.js`](../bench/failover_test.js)) runs steady load (15 VUs) through the router while triggering a container kill, asserting that the failover error rate remains strictly below the stated threshold (**< 2.0%**).
-  - **Transparent Scope Boundary**: In local development without container runtime privileges, the routing engine operates via the in-process [`TrafficRouter.java`](src/main/java/com/urlshortener/routing/TrafficRouter.java) and [`BanditRouter.java`](src/main/java/com/urlshortener/routing/BanditRouter.java), verified by automated test suites ([`EwmaNodeScorerTest.java`](src/test/java/com/urlshortener/routing/EwmaNodeScorerTest.java), [`TrafficRouterFailoverTest.java`](src/test/java/com/urlshortener/routing/TrafficRouterFailoverTest.java), [`BanditRouterTest.java`](src/test/java/com/urlshortener/routing/BanditRouterTest.java)). The containerized multi-node deployment remains **designed for, not fully deployed**.
+  - **Snowflake Worker ID Uniqueness**: Verified across all 3 containers with zero collisions via [`bench/test_cluster_snowflake.mjs`](../bench/test_cluster_snowflake.mjs).
+- **Architecture Boundary: Ingress Routing vs Experimental In-Process Routing**:
+  - In production cluster deployments, ingress reverse proxying and traffic distribution across nodes is handled statically by Nginx / AWS ALB.
+  - The in-process [`TrafficRouter.java`](src/main/java/com/urlshortener/routing/TrafficRouter.java) and [`EwmaNodeScorer.java`](src/main/java/com/urlshortener/routing/EwmaNodeScorer.java) operate as algorithmic prototypes for client-side adaptive load balancing and dashboard telemetry (documented in [`docs/experiments/EWMA_NODE_SCORING.md`](../docs/experiments/EWMA_NODE_SCORING.md)).
 
 ### 6. The Systems Tradeoff: Eventual vs Strong Consistency (Interview Story)
 > **Key Architecture Interview Discussion Point:**

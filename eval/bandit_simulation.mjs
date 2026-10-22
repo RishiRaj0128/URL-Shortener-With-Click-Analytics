@@ -1,26 +1,26 @@
 /**
- * Evaluation Harness: Multi-Armed Bandit (MAB) Routing Simulation
+ * Evaluation Harness: Multi-Armed Bandit (MAB) Multi-Destination A/B Link Optimization Simulation
  * 
- * Simulates payment gateway traffic routing under 3 strategies:
+ * Simulates traffic routing across multiple candidate destination links under 3 strategies:
  * 1. Thompson Sampling (Bayesian Beta-Bernoulli conjugate model)
  * 2. Epsilon-Greedy (epsilon = 0.10)
  * 3. Uniform Random (Baseline)
  * 
  * Target Environment:
- * - Gateway A (HDFC):   True success rate = 0.85 (Optimal)
- * - Gateway B (ICICI):  True success rate = 0.70
- * - Gateway C (Axis):   True success rate = 0.50
+ * - Variant A (Lander V1): Ground truth conversion rate = 0.85 (Optimal)
+ * - Variant B (Lander V2): Ground truth conversion rate = 0.70
+ * - Variant C (Lander V3): Ground truth conversion rate = 0.50
  * 
- * Horizon: 2,000 transactions per strategy
+ * Horizon: 2,000 visitors/redirects per strategy
  */
 
 import fs from 'fs';
 import path from 'path';
 
 const TRUE_RATES = {
-  'Gateway-A (HDFC)': 0.85,
-  'Gateway-B (ICICI)': 0.70,
-  'Gateway-C (Axis)': 0.50,
+  'Variant-A (Lander V1)': 0.85,
+  'Variant-B (Lander V2)': 0.70,
+  'Variant-C (Lander V3)': 0.50,
 };
 
 const OPTIMAL_RATE = 0.85;
@@ -68,37 +68,39 @@ function runSimulation(strategyName, selectFn, updateFn) {
     const chosenArm = selectFn(stats, arms, t);
     stats[chosenArm].pulls++;
 
-    // Ground-truth Bernoulli draw
-    const isSuccess = Math.random() < TRUE_RATES[chosenArm];
-    if (isSuccess) {
+    // Bernoulli conversion trial against true ground-truth rate
+    const success = Math.random() < TRUE_RATES[chosenArm];
+    if (success) {
       stats[chosenArm].successes++;
       totalSuccesses++;
     } else {
       stats[chosenArm].failures++;
     }
 
-    cumulativeRegret += (OPTIMAL_RATE - TRUE_RATES[chosenArm]);
-    if (t % 100 === 0) {
-      regretHistory.push({ t, cumulativeRegret: Math.round(cumulativeRegret * 100) / 100 });
+    if (updateFn) {
+      updateFn(stats[chosenArm], success);
     }
 
-    if (updateFn) {
-      updateFn(stats, chosenArm, isSuccess);
+    // Regret: difference between optimal payoff and expected chosen payoff
+    const instantRegret = OPTIMAL_RATE - TRUE_RATES[chosenArm];
+    cumulativeRegret += instantRegret;
+    if (t % 100 === 0) {
+      regretHistory.push({ trial: t, cumulativeRegret: parseFloat(cumulativeRegret.toFixed(2)) });
     }
   }
 
-  const optimalPulls = stats['Gateway-A (HDFC)'].pulls;
-  const optimalShare = (optimalPulls / TRIALS) * 100;
-  const overallSuccessRate = (totalSuccesses / TRIALS) * 100;
+  const optimalPulls = stats['Variant-A (Lander V1)'].pulls;
+  const optimalShare = ((optimalPulls / TRIALS) * 100).toFixed(2);
+  const overallSuccessRate = ((totalSuccesses / TRIALS) * 100).toFixed(2);
 
   return {
     strategyName,
     trials: TRIALS,
     totalSuccesses,
-    overallSuccessRate: Math.round(overallSuccessRate * 10) / 10,
-    cumulativeRegret: Math.round(cumulativeRegret * 10) / 10,
+    overallSuccessRate: parseFloat(overallSuccessRate),
     optimalPulls,
-    optimalShare: Math.round(optimalShare * 10) / 10,
+    optimalShare: parseFloat(optimalShare),
+    cumulativeRegret: parseFloat(cumulativeRegret.toFixed(2)),
     stats,
     regretHistory,
   };
@@ -108,7 +110,7 @@ function runSimulation(strategyName, selectFn, updateFn) {
 const thompsonResult = runSimulation(
   'Thompson Sampling (Bayesian Beta-Bernoulli)',
   (stats, arms) => {
-    let bestArm = arms[0];
+    let bestArm = null;
     let maxTheta = -1;
     for (const arm of arms) {
       const theta = sampleBeta(stats[arm].alpha, stats[arm].beta);
@@ -119,16 +121,16 @@ const thompsonResult = runSimulation(
     }
     return bestArm;
   },
-  (stats, chosenArm, isSuccess) => {
-    if (isSuccess) stats[chosenArm].alpha += 1;
-    else stats[chosenArm].beta += 1;
+  (armStat, success) => {
+    if (success) armStat.alpha += 1;
+    else armStat.beta += 1;
   }
 );
 
 // 2. Epsilon-Greedy (epsilon = 0.10)
 const EPSILON = 0.10;
 const epsilonResult = runSimulation(
-  'Epsilon-Greedy (ε = 0.10)',
+  'Epsilon-Greedy (epsilon = 0.10)',
   (stats, arms) => {
     if (Math.random() < EPSILON) {
       return arms[Math.floor(Math.random() * arms.length)];
@@ -136,7 +138,7 @@ const epsilonResult = runSimulation(
     let bestArm = arms[0];
     let bestRate = -1;
     for (const arm of arms) {
-      const rate = stats[arm].pulls > 0 ? stats[arm].successes / stats[arm].pulls : 0.5;
+      const rate = armStatMean(stats[arm]);
       if (rate > bestRate) {
         bestRate = rate;
         bestArm = arm;
@@ -147,6 +149,11 @@ const epsilonResult = runSimulation(
   null
 );
 
+function armStatMean(s) {
+  if (s.pulls === 0) return 0.5;
+  return s.successes / s.pulls;
+}
+
 // 3. Uniform Random
 const randomResult = runSimulation(
   'Uniform Random (No Learning Baseline)',
@@ -154,7 +161,7 @@ const randomResult = runSimulation(
   null
 );
 
-console.log('=== MULTI-ARMED BANDIT ROUTING EVALUATION RESULTS ===');
+console.log('=== MULTI-ARMED BANDIT A/B ROUTING EVALUATION RESULTS ===');
 console.table([
   {
     Strategy: thompsonResult.strategyName,
@@ -180,19 +187,19 @@ console.table([
 ]);
 
 // Write Markdown Report
-const reportContent = `# Multi-Armed Bandit (MAB) Routing Evaluation Report
+const reportContent = `# Multi-Armed Bandit (MAB) Multi-Destination A/B Link Optimization Report
 
-> **Target Scenario**: Payment Gateway Routing Optimization across 3 bank gateways with uncertain / fluctuating success rates.
-> - **Gateway A (HDFC)**: Ground truth $p = 0.85$ (Optimal)
-> - **Gateway B (ICICI)**: Ground truth $p = 0.70$
-> - **Gateway C (Axis)**: Ground truth $p = 0.50$
-> - **Horizon**: 2,000 transactions per routing strategy.
+> **Target Scenario**: Dynamic A/B conversion optimization across 3 destination landing page variants with uncertain conversion rates.
+> - **Variant A (Lander V1)**: Ground truth conversion rate $p = 0.85$ (Optimal)
+> - **Variant B (Lander V2)**: Ground truth conversion rate $p = 0.70$
+> - **Variant C (Lander V3)**: Ground truth conversion rate $p = 0.50$
+> - **Horizon**: 2,000 visitors/redirects per routing strategy.
 
 ---
 
 ## 1. Measured Performance Comparison
 
-| Routing Algorithm | Total Transactions | Total Conversions | Overall Success Rate | Optimal Gateway Allocation (HDFC) | Cumulative Regret ($T \\cdot \\mu^* - \\sum r_t$) |
+| Routing Algorithm | Total Redirects | Total Conversions | Overall Conversion Rate | Optimal Variant Allocation (V1) | Cumulative Regret ($T \\cdot \\mu^* - \\sum r_t$) |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Thompson Sampling (Bayesian Beta-Bernoulli)** | 2,000 | **${thompsonResult.totalSuccesses}** | **${thompsonResult.overallSuccessRate}%** | **${thompsonResult.optimalShare}%** (${thompsonResult.optimalPulls} / 2,000) | **${thompsonResult.cumulativeRegret}** |
 | **Epsilon-Greedy ($\\epsilon = 0.10$)** | 2,000 | ${epsilonResult.totalSuccesses} | ${epsilonResult.overallSuccessRate}% | ${epsilonResult.optimalShare}% (${epsilonResult.optimalPulls} / 2,000) | ${epsilonResult.cumulativeRegret} |
@@ -200,34 +207,34 @@ const reportContent = `# Multi-Armed Bandit (MAB) Routing Evaluation Report
 
 ---
 
-## 2. Per-Gateway Breakdown
+## 2. Per-Variant Breakdown
 
 ### A. Thompson Sampling Allocations
 ${Object.entries(thompsonResult.stats)
-  .map(([name, s]) => `- **${name}**: ${s.pulls} routed (${((s.pulls / 2000) * 100).toFixed(1)}%), ${s.successes} successes (${((s.successes / Math.max(1, s.pulls)) * 100).toFixed(1)}% empirical) | $\\alpha=${s.alpha.toFixed(0)}, \\beta=${s.beta.toFixed(0)}$`)
+  .map(([name, s]) => `- **${name}**: ${s.pulls} routed (${((s.pulls / 2000) * 100).toFixed(1)}%), ${s.successes} conversions (${((s.successes / Math.max(1, s.pulls)) * 100).toFixed(1)}% empirical) | $\\alpha=${s.alpha.toFixed(0)}, \\beta=${s.beta.toFixed(0)}$`)
   .join('\n')}
 
 ### B. Epsilon-Greedy Allocations
 ${Object.entries(epsilonResult.stats)
-  .map(([name, s]) => `- **${name}**: ${s.pulls} routed (${((s.pulls / 2000) * 100).toFixed(1)}%), ${s.successes} successes (${((s.successes / Math.max(1, s.pulls)) * 100).toFixed(1)}% empirical)`)
+  .map(([name, s]) => `- **${name}**: ${s.pulls} routed (${((s.pulls / 2000) * 100).toFixed(1)}%), ${s.successes} conversions (${((s.successes / Math.max(1, s.pulls)) * 100).toFixed(1)}% empirical)`)
   .join('\n')}
 
 ### C. Uniform Random Allocations
 ${Object.entries(randomResult.stats)
-  .map(([name, s]) => `- **${name}**: ${s.pulls} routed (${((s.pulls / 2000) * 100).toFixed(1)}%), ${s.successes} successes (${((s.successes / Math.max(1, s.pulls)) * 100).toFixed(1)}% empirical)`)
+  .map(([name, s]) => `- **${name}**: ${s.pulls} routed (${((s.pulls / 2000) * 100).toFixed(1)}%), ${s.successes} conversions (${((s.successes / Math.max(1, s.pulls)) * 100).toFixed(1)}% empirical)`)
   .join('\n')}
 
 ---
 
-## 3. Systems & Interview Insights (Juspay / Payments Context)
+## 3. Engineering Analysis & Discussion
 
 1. **Why Thompson Sampling Outperforms Epsilon-Greedy**:
-   - Epsilon-greedy commits a fixed 10% tax ($\epsilon = 0.10$) to random exploratory traffic forever, even long after Gateway A is proven superior with high statistical confidence.
+   - Epsilon-greedy commits a fixed 10% tax ($\epsilon = 0.10$) to random exploratory traffic forever, even long after Variant A is proven superior with high statistical confidence.
    - Thompson Sampling naturally reduces exploration as posterior distributions concentrate ($\alpha + \beta$ grows), achieving **logarithmic asymptotic regret** $O(\\log T)$ instead of linear regret $O(T \\epsilon)$.
 2. **Exploration vs Exploitation Tradeoff**:
-   - Thompson Sampling allows rapid re-discovery if an underperforming bank gateway heals: samples from wider distributions will occasionally draw high $\\theta$ values, giving degraded gateways a probe request without manual operator intervention.
+   - Thompson Sampling allows continuous adaptation: if an underperforming landing page is updated and begins converting better, samples from wider distributions will occasionally draw high $\\theta$ values, giving updated variants traffic without manual intervention.
 3. **Execution Latency**:
-   - Marsaglia & Tsang Gamma generator computes Beta samples in $< 0.002$ ms in pure code, making it fully viable on the sub-millisecond hot payment redirect path.
+   - Marsaglia & Tsang Gamma generator computes Beta samples in $< 0.002$ ms in pure Java/JS, making it viable on high-throughput redirect paths.
 `;
 
 const evalDir = path.resolve('eval');

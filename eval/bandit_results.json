@@ -2,342 +2,342 @@
   "thompsonResult": {
     "strategyName": "Thompson Sampling (Bayesian Beta-Bernoulli)",
     "trials": 2000,
-    "totalSuccesses": 1706,
-    "overallSuccessRate": 85.3,
-    "cumulativeRegret": 8.3,
-    "optimalPulls": 1957,
-    "optimalShare": 97.9,
+    "totalSuccesses": 1659,
+    "overallSuccessRate": 82.95,
+    "optimalPulls": 1868,
+    "optimalShare": 93.4,
+    "cumulativeRegret": 23.4,
     "stats": {
-      "Gateway-A (HDFC)": {
-        "pulls": 1957,
-        "successes": 1680,
-        "failures": 277,
-        "alpha": 1681,
-        "beta": 278
+      "Variant-A (Lander V1)": {
+        "pulls": 1868,
+        "successes": 1564,
+        "failures": 304,
+        "alpha": 1565,
+        "beta": 305
       },
-      "Gateway-B (ICICI)": {
-        "pulls": 34,
-        "successes": 23,
-        "failures": 11,
-        "alpha": 24,
-        "beta": 12
+      "Variant-B (Lander V2)": {
+        "pulls": 114,
+        "successes": 85,
+        "failures": 29,
+        "alpha": 86,
+        "beta": 30
       },
-      "Gateway-C (Axis)": {
-        "pulls": 9,
-        "successes": 3,
-        "failures": 6,
-        "alpha": 4,
-        "beta": 7
+      "Variant-C (Lander V3)": {
+        "pulls": 18,
+        "successes": 10,
+        "failures": 8,
+        "alpha": 11,
+        "beta": 9
       }
     },
     "regretHistory": [
       {
-        "t": 100,
-        "cumulativeRegret": 5.6
+        "trial": 100,
+        "cumulativeRegret": 5.1
       },
       {
-        "t": 200,
-        "cumulativeRegret": 6.55
+        "trial": 200,
+        "cumulativeRegret": 5.85
       },
       {
-        "t": 300,
-        "cumulativeRegret": 7
+        "trial": 300,
+        "cumulativeRegret": 6.6
       },
       {
-        "t": 400,
-        "cumulativeRegret": 7.75
+        "trial": 400,
+        "cumulativeRegret": 7.2
       },
       {
-        "t": 500,
-        "cumulativeRegret": 7.75
+        "trial": 500,
+        "cumulativeRegret": 7.8
       },
       {
-        "t": 600,
-        "cumulativeRegret": 7.75
+        "trial": 600,
+        "cumulativeRegret": 8.85
       },
       {
-        "t": 700,
-        "cumulativeRegret": 7.75
+        "trial": 700,
+        "cumulativeRegret": 10.5
       },
       {
-        "t": 800,
-        "cumulativeRegret": 8.1
+        "trial": 800,
+        "cumulativeRegret": 11.75
       },
       {
-        "t": 900,
-        "cumulativeRegret": 8.1
+        "trial": 900,
+        "cumulativeRegret": 12.35
       },
       {
-        "t": 1000,
-        "cumulativeRegret": 8.1
+        "trial": 1000,
+        "cumulativeRegret": 13.7
       },
       {
-        "t": 1100,
-        "cumulativeRegret": 8.1
+        "trial": 1100,
+        "cumulativeRegret": 15.4
       },
       {
-        "t": 1200,
-        "cumulativeRegret": 8.1
+        "trial": 1200,
+        "cumulativeRegret": 17.1
       },
       {
-        "t": 1300,
-        "cumulativeRegret": 8.1
+        "trial": 1300,
+        "cumulativeRegret": 19.05
       },
       {
-        "t": 1400,
-        "cumulativeRegret": 8.25
+        "trial": 1400,
+        "cumulativeRegret": 21.3
       },
       {
-        "t": 1500,
-        "cumulativeRegret": 8.25
+        "trial": 1500,
+        "cumulativeRegret": 22.45
       },
       {
-        "t": 1600,
-        "cumulativeRegret": 8.25
+        "trial": 1600,
+        "cumulativeRegret": 22.95
       },
       {
-        "t": 1700,
-        "cumulativeRegret": 8.25
+        "trial": 1700,
+        "cumulativeRegret": 23.25
       },
       {
-        "t": 1800,
-        "cumulativeRegret": 8.25
+        "trial": 1800,
+        "cumulativeRegret": 23.4
       },
       {
-        "t": 1900,
-        "cumulativeRegret": 8.25
+        "trial": 1900,
+        "cumulativeRegret": 23.4
       },
       {
-        "t": 2000,
-        "cumulativeRegret": 8.25
+        "trial": 2000,
+        "cumulativeRegret": 23.4
       }
     ]
   },
   "epsilonResult": {
-    "strategyName": "Epsilon-Greedy (ε = 0.10)",
+    "strategyName": "Epsilon-Greedy (epsilon = 0.10)",
     "trials": 2000,
-    "totalSuccesses": 1650,
-    "overallSuccessRate": 82.5,
-    "cumulativeRegret": 33.9,
-    "optimalPulls": 1866,
-    "optimalShare": 93.3,
+    "totalSuccesses": 1628,
+    "overallSuccessRate": 81.4,
+    "optimalPulls": 1843,
+    "optimalShare": 92.15,
+    "cumulativeRegret": 38.55,
     "stats": {
-      "Gateway-A (HDFC)": {
-        "pulls": 1866,
-        "successes": 1565,
-        "failures": 301,
+      "Variant-A (Lander V1)": {
+        "pulls": 1843,
+        "successes": 1540,
+        "failures": 303,
         "alpha": 1,
         "beta": 1
       },
-      "Gateway-B (ICICI)": {
-        "pulls": 65,
-        "successes": 48,
-        "failures": 17,
+      "Variant-B (Lander V2)": {
+        "pulls": 82,
+        "successes": 59,
+        "failures": 23,
         "alpha": 1,
         "beta": 1
       },
-      "Gateway-C (Axis)": {
-        "pulls": 69,
-        "successes": 37,
-        "failures": 32,
+      "Variant-C (Lander V3)": {
+        "pulls": 75,
+        "successes": 29,
+        "failures": 46,
         "alpha": 1,
         "beta": 1
       }
     },
     "regretHistory": [
       {
-        "t": 100,
-        "cumulativeRegret": 2.9
+        "trial": 100,
+        "cumulativeRegret": 1.85
       },
       {
-        "t": 200,
-        "cumulativeRegret": 3.9
+        "trial": 200,
+        "cumulativeRegret": 3.95
       },
       {
-        "t": 300,
-        "cumulativeRegret": 5.35
+        "trial": 300,
+        "cumulativeRegret": 6
       },
       {
-        "t": 400,
-        "cumulativeRegret": 5.85
+        "trial": 400,
+        "cumulativeRegret": 7.8
       },
       {
-        "t": 500,
-        "cumulativeRegret": 7.5
+        "trial": 500,
+        "cumulativeRegret": 10.95
       },
       {
-        "t": 600,
-        "cumulativeRegret": 10.75
+        "trial": 600,
+        "cumulativeRegret": 12.1
       },
       {
-        "t": 700,
-        "cumulativeRegret": 11.6
+        "trial": 700,
+        "cumulativeRegret": 14.3
       },
       {
-        "t": 800,
-        "cumulativeRegret": 13
+        "trial": 800,
+        "cumulativeRegret": 15.6
       },
       {
-        "t": 900,
-        "cumulativeRegret": 14.7
+        "trial": 900,
+        "cumulativeRegret": 17.25
       },
       {
-        "t": 1000,
-        "cumulativeRegret": 17.05
+        "trial": 1000,
+        "cumulativeRegret": 19.4
       },
       {
-        "t": 1100,
-        "cumulativeRegret": 18.2
+        "trial": 1100,
+        "cumulativeRegret": 22.1
       },
       {
-        "t": 1200,
-        "cumulativeRegret": 19.65
+        "trial": 1200,
+        "cumulativeRegret": 23.45
       },
       {
-        "t": 1300,
-        "cumulativeRegret": 21.35
+        "trial": 1300,
+        "cumulativeRegret": 25.6
       },
       {
-        "t": 1400,
-        "cumulativeRegret": 23.3
+        "trial": 1400,
+        "cumulativeRegret": 26.55
       },
       {
-        "t": 1500,
-        "cumulativeRegret": 24.45
+        "trial": 1500,
+        "cumulativeRegret": 27.7
       },
       {
-        "t": 1600,
-        "cumulativeRegret": 25.45
+        "trial": 1600,
+        "cumulativeRegret": 30.1
       },
       {
-        "t": 1700,
-        "cumulativeRegret": 28.15
+        "trial": 1700,
+        "cumulativeRegret": 32.95
       },
       {
-        "t": 1800,
-        "cumulativeRegret": 29.7
+        "trial": 1800,
+        "cumulativeRegret": 34.8
       },
       {
-        "t": 1900,
-        "cumulativeRegret": 31.55
+        "trial": 1900,
+        "cumulativeRegret": 36.25
       },
       {
-        "t": 2000,
-        "cumulativeRegret": 33.9
+        "trial": 2000,
+        "cumulativeRegret": 38.55
       }
     ]
   },
   "randomResult": {
     "strategyName": "Uniform Random (No Learning Baseline)",
     "trials": 2000,
-    "totalSuccesses": 1336,
-    "overallSuccessRate": 66.8,
-    "cumulativeRegret": 348.9,
-    "optimalPulls": 649,
-    "optimalShare": 32.5,
+    "totalSuccesses": 1384,
+    "overallSuccessRate": 69.2,
+    "optimalPulls": 688,
+    "optimalShare": 34.4,
+    "cumulativeRegret": 322.2,
     "stats": {
-      "Gateway-A (HDFC)": {
-        "pulls": 649,
-        "successes": 539,
-        "failures": 110,
+      "Variant-A (Lander V1)": {
+        "pulls": 688,
+        "successes": 599,
+        "failures": 89,
         "alpha": 1,
         "beta": 1
       },
-      "Gateway-B (ICICI)": {
-        "pulls": 620,
-        "successes": 429,
-        "failures": 191,
+      "Variant-B (Lander V2)": {
+        "pulls": 685,
+        "successes": 466,
+        "failures": 219,
         "alpha": 1,
         "beta": 1
       },
-      "Gateway-C (Axis)": {
-        "pulls": 731,
-        "successes": 368,
-        "failures": 363,
+      "Variant-C (Lander V3)": {
+        "pulls": 627,
+        "successes": 319,
+        "failures": 308,
         "alpha": 1,
         "beta": 1
       }
     },
     "regretHistory": [
       {
-        "t": 100,
-        "cumulativeRegret": 17.55
+        "trial": 100,
+        "cumulativeRegret": 15.1
       },
       {
-        "t": 200,
-        "cumulativeRegret": 37.3
+        "trial": 200,
+        "cumulativeRegret": 31.65
       },
       {
-        "t": 300,
-        "cumulativeRegret": 53.55
+        "trial": 300,
+        "cumulativeRegret": 46
       },
       {
-        "t": 400,
-        "cumulativeRegret": 70.45
+        "trial": 400,
+        "cumulativeRegret": 62.2
       },
       {
-        "t": 500,
-        "cumulativeRegret": 88.45
+        "trial": 500,
+        "cumulativeRegret": 79.15
       },
       {
-        "t": 600,
-        "cumulativeRegret": 106.25
+        "trial": 600,
+        "cumulativeRegret": 94.7
       },
       {
-        "t": 700,
-        "cumulativeRegret": 123.05
+        "trial": 700,
+        "cumulativeRegret": 110.35
       },
       {
-        "t": 800,
-        "cumulativeRegret": 139.05
+        "trial": 800,
+        "cumulativeRegret": 122.8
       },
       {
-        "t": 900,
-        "cumulativeRegret": 153
+        "trial": 900,
+        "cumulativeRegret": 139.9
       },
       {
-        "t": 1000,
-        "cumulativeRegret": 171.65
+        "trial": 1000,
+        "cumulativeRegret": 153.65
       },
       {
-        "t": 1100,
-        "cumulativeRegret": 191.7
+        "trial": 1100,
+        "cumulativeRegret": 168.5
       },
       {
-        "t": 1200,
-        "cumulativeRegret": 209.4
+        "trial": 1200,
+        "cumulativeRegret": 186.35
       },
       {
-        "t": 1300,
-        "cumulativeRegret": 225.7
+        "trial": 1300,
+        "cumulativeRegret": 205.5
       },
       {
-        "t": 1400,
-        "cumulativeRegret": 243.8
+        "trial": 1400,
+        "cumulativeRegret": 219.95
       },
       {
-        "t": 1500,
-        "cumulativeRegret": 264.15
+        "trial": 1500,
+        "cumulativeRegret": 237.1
       },
       {
-        "t": 1600,
-        "cumulativeRegret": 281.55
+        "trial": 1600,
+        "cumulativeRegret": 253.15
       },
       {
-        "t": 1700,
-        "cumulativeRegret": 297.5
+        "trial": 1700,
+        "cumulativeRegret": 270.2
       },
       {
-        "t": 1800,
-        "cumulativeRegret": 313.6
+        "trial": 1800,
+        "cumulativeRegret": 286.2
       },
       {
-        "t": 1900,
-        "cumulativeRegret": 330.6
+        "trial": 1900,
+        "cumulativeRegret": 306.25
       },
       {
-        "t": 2000,
-        "cumulativeRegret": 348.85
+        "trial": 2000,
+        "cumulativeRegret": 322.2
       }
     ]
   }

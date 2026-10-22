@@ -129,12 +129,51 @@ This document tracks all changes made per phase, assumptions adopted, and remain
 
 ---
 
+## Phase 4: Scope Cleanup (`feature/phase-4-scope-cleanup`)
+
+### PR Summary: Repurpose Multi-Armed Bandit to A/B Link Optimization, Eliminate Banking Domain Mismatch, and Relocate EWMA Scoring to Experiments
+
+#### 1. Repurposing `BanditRouter` to Multi-Destination A/B Link Optimization
+- **Problem**: `BanditRouter` and associated test scripts previously referenced Indian payment gateways ("HDFC", "ICICI", "Axis"), creating a domain mismatch for a URL shortener service.
+- **Resolution**:
+  - Repurposed [`BanditRouter.java`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/main/java/com/urlshortener/routing/BanditRouter.java) into a dynamic Multi-Destination A/B Link Optimizer.
+  - Added conversion feedback callback `recordConversion(routeKey, destinationId, converted, latencyMs)` updating Beta-Bernoulli conjugate priors.
+  - Enforced a 2–5 destination variant limit per campaign.
+  - Updated all unit tests in [`BanditRouterTest.java`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/test/java/com/urlshortener/routing/BanditRouterTest.java) to test landing page variants (`variant-landing-v1`, `variant-landing-v2`), conversion recording, and upper limit enforcement.
+
+#### 2. Clean Evaluation Artifacts for Multi-Armed Bandit Optimization
+- **Problem**: Evaluation scripts (`eval/bandit_simulation.mjs`), reports (`eval/BANDIT_REPORT.md`), and JSON artifacts (`eval/bandit_results.json`) contained synthetic bank gateway simulations.
+- **Resolution**:
+  - Rewrote [`eval/bandit_simulation.mjs`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/eval/bandit_simulation.mjs) for A/B landing page conversion optimization (Variant A: 0.85, Variant B: 0.70, Variant C: 0.50).
+  - Executed reproducible simulation across 2,000 visitors per strategy:
+    - **Thompson Sampling**: **93.4%** optimal variant allocation, **83.0%** overall conversion rate, **23.4** cumulative regret.
+    - **Epsilon-Greedy ($\epsilon=0.10$)**: **92.2%** optimal variant allocation, **81.4%** overall conversion rate, **38.6** cumulative regret.
+    - **Uniform Random (Baseline)**: **34.4%** optimal variant allocation, **69.2%** overall conversion rate, **322.2** cumulative regret.
+  - Saved regenerated data to [`eval/bandit_results.json`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/eval/bandit_results.json) and [`eval/BANDIT_REPORT.md`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/eval/BANDIT_REPORT.md).
+
+#### 3. Relocate EWMA Node Scoring to Experimental Documentation
+- **Problem**: Documentation previously implied in-process EWMA scoring was the active ingress tier, while cluster ingress is actually performed statically by Nginx reverse proxy.
+- **Resolution**:
+  - Authored [`docs/experiments/EWMA_NODE_SCORING.md`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/docs/experiments/EWMA_NODE_SCORING.md) clearly distinguishing between static infrastructure reverse proxying (Nginx / AWS ALB) and the in-process client-side adaptive load balancing prototype.
+  - Documented mathematical formulations for smoothed latency, error penalties, staged shedding (100% $\to$ 50% $\to$ 0%), and slow-start warmup ramps (10% $\to$ 25% $\to$ 50% $\to$ 100%).
+
+#### 4. Softened Sensationalist Language in Documentation
+- **Resolution**:
+  - Updated [`README.md`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/README.md) and [`backend/README.md`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/README.md).
+  - Replaced inflated claims with precise mathematical terminology, removed duplicated sections, and updated MAB metrics to match fresh benchmark artifacts.
+
+### Assumptions Made in Phase 4
+1. **Scope Alignment**: Repurposing the Multi-Armed Bandit to multi-destination landing page A/B testing aligns with URL shortening use cases (e.g. smart promotional links) while retaining the mathematical value of Thompson Sampling.
+2. **Infrastructure Boundary**: Nginx/ALB remains the ingress router; in-process EWMA scoring is an experimental client-side load balancing prototype.
+
+---
+
 ## Remaining Phases (Pending Approval)
 
-- **Phase 4**: Scope cleanup (Repurpose `BanditRouter` to multi-destination A/B link optimization, eliminate banking references, relocate EWMA node scoring to experiments, soften sensationalist wording).
 - **Phase 5**: Observability (Micrometer Prometheus meters, provisioned Grafana dashboard in `docker-compose.yml`, alert rules, OpenTelemetry distributed tracing).
 - **Phase 6**: Testing & CI (Testcontainers PostgreSQL/Redis integration suite, unit tests for anomaly math and Thompson sampling, GitHub Actions with Trivy, CodeQL, and Dependabot).
 - **Phase 7**: Deployment & IaC (Multi-stage non-root Dockerfile, Terraform AWS infrastructure, GitHub Actions deploy workflow with OIDC, `docs/DEPLOY.md`).
 - **Phase 8**: Documentation & Portfolio Integrity (`RESUME_FACTS.md`, architecture ADRs, verified `INCIDENTS.md`).
+
 
 

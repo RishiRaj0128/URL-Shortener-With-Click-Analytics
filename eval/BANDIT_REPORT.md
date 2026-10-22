@@ -1,48 +1,48 @@
-# Multi-Armed Bandit (MAB) Routing Evaluation Report
+# Multi-Armed Bandit (MAB) Multi-Destination A/B Link Optimization Report
 
-> **Target Scenario**: Payment Gateway Routing Optimization across 3 bank gateways with uncertain / fluctuating success rates.
-> - **Gateway A (HDFC)**: Ground truth $p = 0.85$ (Optimal)
-> - **Gateway B (ICICI)**: Ground truth $p = 0.70$
-> - **Gateway C (Axis)**: Ground truth $p = 0.50$
-> - **Horizon**: 2,000 transactions per routing strategy.
+> **Target Scenario**: Dynamic A/B conversion optimization across 3 destination landing page variants with uncertain conversion rates.
+> - **Variant A (Lander V1)**: Ground truth conversion rate $p = 0.85$ (Optimal)
+> - **Variant B (Lander V2)**: Ground truth conversion rate $p = 0.70$
+> - **Variant C (Lander V3)**: Ground truth conversion rate $p = 0.50$
+> - **Horizon**: 2,000 visitors/redirects per routing strategy.
 
 ---
 
 ## 1. Measured Performance Comparison
 
-| Routing Algorithm | Total Transactions | Total Conversions | Overall Success Rate | Optimal Gateway Allocation (HDFC) | Cumulative Regret ($T \cdot \mu^* - \sum r_t$) |
+| Routing Algorithm | Total Redirects | Total Conversions | Overall Conversion Rate | Optimal Variant Allocation (V1) | Cumulative Regret ($T \cdot \mu^* - \sum r_t$) |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Thompson Sampling (Bayesian Beta-Bernoulli)** | 2,000 | **1706** | **85.3%** | **97.9%** (1957 / 2,000) | **8.3** |
-| **Epsilon-Greedy ($\epsilon = 0.10$)** | 2,000 | 1650 | 82.5% | 93.3% (1866 / 2,000) | 33.9 |
-| **Uniform Random (Baseline)** | 2,000 | 1336 | 66.8% | 32.5% (649 / 2,000) | 348.9 |
+| **Thompson Sampling (Bayesian Beta-Bernoulli)** | 2,000 | **1659** | **82.95%** | **93.4%** (1868 / 2,000) | **23.4** |
+| **Epsilon-Greedy ($\epsilon = 0.10$)** | 2,000 | 1628 | 81.4% | 92.15% (1843 / 2,000) | 38.55 |
+| **Uniform Random (Baseline)** | 2,000 | 1384 | 69.2% | 34.4% (688 / 2,000) | 322.2 |
 
 ---
 
-## 2. Per-Gateway Breakdown
+## 2. Per-Variant Breakdown
 
 ### A. Thompson Sampling Allocations
-- **Gateway-A (HDFC)**: 1957 routed (97.9%), 1680 successes (85.8% empirical) | $\alpha=1681, \beta=278$
-- **Gateway-B (ICICI)**: 34 routed (1.7%), 23 successes (67.6% empirical) | $\alpha=24, \beta=12$
-- **Gateway-C (Axis)**: 9 routed (0.4%), 3 successes (33.3% empirical) | $\alpha=4, \beta=7$
+- **Variant-A (Lander V1)**: 1868 routed (93.4%), 1564 conversions (83.7% empirical) | $\alpha=1565, \beta=305$
+- **Variant-B (Lander V2)**: 114 routed (5.7%), 85 conversions (74.6% empirical) | $\alpha=86, \beta=30$
+- **Variant-C (Lander V3)**: 18 routed (0.9%), 10 conversions (55.6% empirical) | $\alpha=11, \beta=9$
 
 ### B. Epsilon-Greedy Allocations
-- **Gateway-A (HDFC)**: 1866 routed (93.3%), 1565 successes (83.9% empirical)
-- **Gateway-B (ICICI)**: 65 routed (3.3%), 48 successes (73.8% empirical)
-- **Gateway-C (Axis)**: 69 routed (3.5%), 37 successes (53.6% empirical)
+- **Variant-A (Lander V1)**: 1843 routed (92.2%), 1540 conversions (83.6% empirical)
+- **Variant-B (Lander V2)**: 82 routed (4.1%), 59 conversions (72.0% empirical)
+- **Variant-C (Lander V3)**: 75 routed (3.8%), 29 conversions (38.7% empirical)
 
 ### C. Uniform Random Allocations
-- **Gateway-A (HDFC)**: 649 routed (32.5%), 539 successes (83.1% empirical)
-- **Gateway-B (ICICI)**: 620 routed (31.0%), 429 successes (69.2% empirical)
-- **Gateway-C (Axis)**: 731 routed (36.5%), 368 successes (50.3% empirical)
+- **Variant-A (Lander V1)**: 688 routed (34.4%), 599 conversions (87.1% empirical)
+- **Variant-B (Lander V2)**: 685 routed (34.3%), 466 conversions (68.0% empirical)
+- **Variant-C (Lander V3)**: 627 routed (31.4%), 319 conversions (50.9% empirical)
 
 ---
 
-## 3. Systems & Interview Insights (Juspay / Payments Context)
+## 3. Engineering Analysis & Discussion
 
 1. **Why Thompson Sampling Outperforms Epsilon-Greedy**:
-   - Epsilon-greedy commits a fixed 10% tax ($epsilon = 0.10$) to random exploratory traffic forever, even long after Gateway A is proven superior with high statistical confidence.
+   - Epsilon-greedy commits a fixed 10% tax ($epsilon = 0.10$) to random exploratory traffic forever, even long after Variant A is proven superior with high statistical confidence.
    - Thompson Sampling naturally reduces exploration as posterior distributions concentrate ($alpha + eta$ grows), achieving **logarithmic asymptotic regret** $O(\log T)$ instead of linear regret $O(T \epsilon)$.
 2. **Exploration vs Exploitation Tradeoff**:
-   - Thompson Sampling allows rapid re-discovery if an underperforming bank gateway heals: samples from wider distributions will occasionally draw high $\theta$ values, giving degraded gateways a probe request without manual operator intervention.
+   - Thompson Sampling allows continuous adaptation: if an underperforming landing page is updated and begins converting better, samples from wider distributions will occasionally draw high $\theta$ values, giving updated variants traffic without manual intervention.
 3. **Execution Latency**:
-   - Marsaglia & Tsang Gamma generator computes Beta samples in $< 0.002$ ms in pure code, making it fully viable on the sub-millisecond hot payment redirect path.
+   - Marsaglia & Tsang Gamma generator computes Beta samples in $< 0.002$ ms in pure Java/JS, making it viable on high-throughput redirect paths.

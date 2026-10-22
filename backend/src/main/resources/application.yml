@@ -71,7 +71,7 @@ logging:
     com.urlshortener: DEBUG
     org.springframework.security: INFO
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%X{traceId:-system}] - %msg%n"
 
 # Application-specific properties
 app:

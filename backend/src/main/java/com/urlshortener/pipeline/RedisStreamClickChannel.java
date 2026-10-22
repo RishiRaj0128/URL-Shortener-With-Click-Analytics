@@ -131,6 +131,7 @@ public class RedisStreamClickChannel implements ClickEventChannel {
             fields.put("ip", event.clientIp() != null ? event.clientIp() : "");
             fields.put("userAgent", event.userAgent() != null ? event.userAgent() : "");
             fields.put("referrer", event.referrer() != null ? event.referrer() : "");
+            fields.put("traceId", event.traceId() != null ? event.traceId() : "");
 
             // Native XADD with approximate max-length capping
             byte[] keyBytes = streamKey.getBytes(StandardCharsets.UTF_8);

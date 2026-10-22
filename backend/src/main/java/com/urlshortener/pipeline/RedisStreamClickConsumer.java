@@ -64,7 +64,8 @@ public class RedisStreamClickConsumer implements Runnable {
             @Value("${app.queue.batch-size:50}") int batchSize,
             @Value("${app.queue.poll-timeout-ms:1000}") long pollTimeoutMs,
             @Value("${app.queue.idle-threshold-ms:60000}") long idleThresholdMs,
-            @Value("${app.consumer.enabled:true}") boolean autoStart) {
+            @Value("${app.consumer.enabled:true}") boolean autoStart,
+            @Autowired(required = false) io.micrometer.core.instrument.MeterRegistry meterRegistry) {
         this.redisTemplate = redisTemplate;
         this.processor = processor;
         this.streamKey = streamKey;
@@ -74,6 +75,25 @@ public class RedisStreamClickConsumer implements Runnable {
         this.pollTimeoutMs = pollTimeoutMs;
         this.idleThresholdMs = idleThresholdMs;
         this.autoStart = autoStart;
+
+        if (meterRegistry != null) {
+            meterRegistry.gauge("click.events.acked", ackedCount);
+            meterRegistry.gauge("click.events.recovered_pending", recoveredPendingCount);
+            meterRegistry.gauge("click.stream.queue_depth", this, RedisStreamClickConsumer::getQueueDepth);
+        }
+    }
+
+    public RedisStreamClickConsumer(
+            StringRedisTemplate redisTemplate,
+            ClickEventProcessor processor,
+            String streamKey,
+            String groupName,
+            String consumerName,
+            int batchSize,
+            long pollTimeoutMs,
+            long idleThresholdMs,
+            boolean autoStart) {
+        this(redisTemplate, processor, streamKey, groupName, consumerName, batchSize, pollTimeoutMs, idleThresholdMs, autoStart, null);
     }
 
     @PostConstruct
@@ -175,8 +195,16 @@ public class RedisStreamClickConsumer implements Runnable {
                 }
 
                 ClickEvent event = parseRecord(record);
+                if (event.traceId() != null && !event.traceId().isBlank()) {
+                    org.slf4j.MDC.put("traceId", event.traceId());
+                }
                 // Step 1 & 2 & 3: Durable dedup, Anomaly check, Rollup commit in DB transaction
-                boolean processed = processor.process(event, consumerName);
+                boolean processed;
+                try {
+                    processed = processor.process(event, consumerName);
+                } finally {
+                    org.slf4j.MDC.remove("traceId");
+                }
 
                 // Step 4: Explicit XACK ONLY AFTER transaction commits
                 redisTemplate.opsForStream().acknowledge(streamKey, groupName, record.getId());
@@ -228,8 +256,14 @@ public class RedisStreamClickConsumer implements Runnable {
                     if (claimed != null && !claimed.isEmpty()) {
                         for (MapRecord<String, Object, Object> record : claimed) {
                             ClickEvent event = parseRecord(record);
-                            // Idempotently process (dedup ensures no double count)
-                            processor.process(event, consumerName + "-recovery");
+                            if (event.traceId() != null && !event.traceId().isBlank()) {
+                                org.slf4j.MDC.put("traceId", event.traceId());
+                            }
+                            try {
+                                processor.process(event, consumerName + "-recovery");
+                            } finally {
+                                org.slf4j.MDC.remove("traceId");
+                            }
                             // Acknowledge claimed record
                             redisTemplate.opsForStream().acknowledge(streamKey, groupName, record.getId());
                             ackedCount.incrementAndGet();
@@ -246,6 +280,15 @@ public class RedisStreamClickConsumer implements Runnable {
         }
     }
 
+    public long getQueueDepth() {
+        try {
+            Long size = redisTemplate.opsForStream().size(streamKey);
+            return size != null ? size : 0L;
+        } catch (Exception e) {
+            return 0L;
+        }
+    }
+
     private ClickEvent parseRecord(MapRecord<String, Object, Object> record) {
         Map<Object, Object> value = record.getValue();
         String eventId = (String) value.get("eventId");
@@ -259,8 +302,9 @@ public class RedisStreamClickConsumer implements Runnable {
         String ip = (String) value.get("ip");
         String userAgent = (String) value.get("userAgent");
         String referrer = (String) value.get("referrer");
+        String traceId = (String) value.get("traceId");
 
-        return new ClickEvent(eventId, shortCode, urlId, timestamp, ip, userAgent, referrer);
+        return new ClickEvent(eventId, shortCode, urlId, timestamp, ip, userAgent, referrer, traceId);
     }
 
     public void enableCrashSimulation(int crashAfterN) {

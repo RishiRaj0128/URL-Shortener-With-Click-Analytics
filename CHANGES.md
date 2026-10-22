@@ -168,12 +168,65 @@ This document tracks all changes made per phase, assumptions adopted, and remain
 
 ---
 
+## Phase 5: Observability (`feature/phase-5-observability`)
+
+### PR Summary: Prometheus Metrics, Alert Rules, Grafana Dashboards, and End-to-End Distributed Tracing
+
+#### 1. Distributed Tracing & Correlation Pipeline
+- **Problem**: Requests traversing from the public redirect endpoint into asynchronous Redis Streams and downstream DB transaction processors lacked end-to-end trace correlation. Logs could not correlate a specific redirect with its subsequent consumer aggregation.
+- **Resolution**:
+  - Implemented [`TraceContextFilter.java`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/main/java/com/urlshortener/security/TraceContextFilter.java) supporting W3C `traceparent` headers and `X-Trace-Id` headers with automatic 32-hex generation fallback.
+  - Bound `traceId` to SLF4J MDC across the request lifecycle and updated console logging pattern in [`application.yml`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/main/resources/application.yml) to include `[%X{traceId:-system}]`.
+  - Added `traceId` field to [`ClickEvent.java`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/main/java/com/urlshortener/dto/ClickEvent.java), serialized into Redis Stream records by [`RedisStreamClickChannel.java`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/main/java/com/urlshortener/pipeline/RedisStreamClickChannel.java).
+  - Configured [`RedisStreamClickConsumer.java`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/main/java/com/urlshortener/pipeline/RedisStreamClickConsumer.java) to extract `traceId` and establish MDC context during asynchronous event consumption, guaranteeing unified log correlation from HTTP entry to DB persistence.
+
+#### 2. Micrometer Instrumentation
+- **Problem**: Key redirect latency distributions, error rate ratios, and click ingestion pipeline rates were not exposed to Prometheus.
+- **Resolution**:
+  - Instrumented [`RedirectController.java`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/main/java/com/urlshortener/controller/RedirectController.java) with `redirect.latency` `Timer` (measuring p50/p95/p99) and `redirect.requests` `Counter` tagged by HTTP status (`302`, `410`, etc.).
+  - Instrumented [`RedisStreamClickConsumer.java`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/main/java/com/urlshortener/pipeline/RedisStreamClickConsumer.java) with `click.events.acked`, `click.events.recovered_pending`, and `click.stream.queue_depth` gauges.
+  - Instrumented [`ClickEventProcessor.java`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/main/java/com/urlshortener/pipeline/ClickEventProcessor.java) with gauges for processed, deduplicated, and bot velocity events.
+
+#### 3. Prometheus & Alert Rules Provisioning
+- **Resolution**:
+  - Configured Prometheus scrape job in [`infra/prometheus/prometheus.yml`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/infra/prometheus/prometheus.yml) pulling metrics at 5s intervals from all 3 app cluster replicas (`app-1:8081`, `app-2:8082`, `app-3:8083`).
+  - Added production alert rules in [`infra/prometheus/alert_rules.yml`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/infra/prometheus/alert_rules.yml):
+    - `HighRedirectLatencyP95`: Triggers when redirect p95 exceeds 50ms for 1m.
+    - `HighRedirectErrorRate`: Triggers when 5xx errors exceed 2% of traffic for 1m.
+    - `CircuitBreakerOpen`: Triggers when any Resilience4j circuit breaker trips OPEN for 30s.
+    - `ClickQueueDroppedEvents`: Triggers when publisher backpressure drops click events.
+
+#### 4. Automated Grafana Provisioning
+- **Resolution**:
+  - Configured automated datasource provisioning in [`infra/grafana/provisioning/datasources/prometheus.yml`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/infra/grafana/provisioning/datasources/prometheus.yml).
+  - Configured dashboard provider in [`infra/grafana/provisioning/dashboards/dashboards.yml`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/infra/grafana/provisioning/dashboards/dashboards.yml).
+  - Built production dashboard [`infra/grafana/dashboards/url_shortener_dashboard.json`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/infra/grafana/dashboards/url_shortener_dashboard.json) with real-time panels:
+    - Redirect Request Throughput (RPS by Status)
+    - Latency Percentiles (p50, p95, p99 ms)
+    - Redis Stream Backlog (Queue Depth)
+    - Click Ingestion Processing Rate (Acked, Deduplicated, Dropped)
+    - Resilience4j Circuit Breaker Status
+  - Added `prometheus` and `grafana` services with persistent volume mounts to [`docker-compose.yml`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/docker-compose.yml).
+
+#### 5. Verification Suite
+- Added [`ObservabilityAndTracingTest.java`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/test/java/com/urlshortener/service/ObservabilityAndTracingTest.java) verifying:
+  - W3C `traceparent` parsing, MDC attachment, and response header injection.
+  - Fallback generation of 32-character hex trace IDs when incoming headers are absent.
+  - End-to-end propagation of trace ID into `ClickEvent` queue payload.
+  - `RedirectController` Micrometer latency timer and request counters.
+
+### Assumptions Made in Phase 5
+1. **Trace Standard**: W3C TraceContext (`traceparent`) is the standard format for distributed tracing, with `X-Trace-Id` supported for legacy/custom HTTP clients.
+2. **Prometheus Portability**: Provisioned datasources and dashboards in `infra/` enable instant out-of-the-box cluster observability upon `docker compose up` without manual Grafana UI configuration.
+
+---
+
 ## Remaining Phases (Pending Approval)
 
-- **Phase 5**: Observability (Micrometer Prometheus meters, provisioned Grafana dashboard in `docker-compose.yml`, alert rules, OpenTelemetry distributed tracing).
 - **Phase 6**: Testing & CI (Testcontainers PostgreSQL/Redis integration suite, unit tests for anomaly math and Thompson sampling, GitHub Actions with Trivy, CodeQL, and Dependabot).
 - **Phase 7**: Deployment & IaC (Multi-stage non-root Dockerfile, Terraform AWS infrastructure, GitHub Actions deploy workflow with OIDC, `docs/DEPLOY.md`).
 - **Phase 8**: Documentation & Portfolio Integrity (`RESUME_FACTS.md`, architecture ADRs, verified `INCIDENTS.md`).
+
 
 
 

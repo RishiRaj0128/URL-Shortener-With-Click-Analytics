@@ -49,12 +49,28 @@ public class ClickEventProcessor {
             @Autowired(required = false) ProcessedEventRepository processedEventRepository,
             @Autowired(required = false) ClickEventDedupRepository legacyDedupRepository,
             @Autowired(required = false) AnomalyDetector anomalyDetector,
-            @Autowired(required = false) StringRedisTemplate redisTemplate) {
+            @Autowired(required = false) StringRedisTemplate redisTemplate,
+            @Autowired(required = false) io.micrometer.core.instrument.MeterRegistry meterRegistry) {
         this.rollupRepository = rollupRepository;
         this.processedEventRepository = processedEventRepository;
         this.legacyDedupRepository = legacyDedupRepository;
         this.anomalyDetector = anomalyDetector;
         this.redisTemplate = redisTemplate;
+
+        if (meterRegistry != null) {
+            meterRegistry.gauge("click.processor.processed", processedCount);
+            meterRegistry.gauge("click.processor.deduplicated", duplicateCount);
+            meterRegistry.gauge("click.processor.bot_events", botEventCount);
+        }
+    }
+
+    public ClickEventProcessor(
+            ClickRollupRepository rollupRepository,
+            ProcessedEventRepository processedEventRepository,
+            ClickEventDedupRepository legacyDedupRepository,
+            AnomalyDetector anomalyDetector,
+            StringRedisTemplate redisTemplate) {
+        this(rollupRepository, processedEventRepository, legacyDedupRepository, anomalyDetector, redisTemplate, null);
     }
 
     /**

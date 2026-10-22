@@ -38,16 +38,23 @@ public class UrlController {
   private final RateLimitingService rateLimitingService;
   private final JwtTokenProvider jwtTokenProvider;
 
+  private final Long workerId;
+  private final com.urlshortener.util.ClientIpResolver clientIpResolver;
+
   @Autowired
   public UrlController(
       UrlShorteningService urlShorteningService,
       ClickService clickService,
       RateLimitingService rateLimitingService,
-      JwtTokenProvider jwtTokenProvider) {
+      JwtTokenProvider jwtTokenProvider,
+      @org.springframework.beans.factory.annotation.Value("${app.snowflake.worker-id:1}") Long workerId,
+      @Autowired(required = false) com.urlshortener.util.ClientIpResolver clientIpResolver) {
     this.urlShorteningService = urlShorteningService;
     this.clickService = clickService;
     this.rateLimitingService = rateLimitingService;
     this.jwtTokenProvider = jwtTokenProvider;
+    this.workerId = workerId;
+    this.clientIpResolver = clientIpResolver != null ? clientIpResolver : new com.urlshortener.util.ClientIpResolver("127.0.0.1,::1");
   }
 
   /**
@@ -142,6 +149,19 @@ public class UrlController {
   }
 
   /**
+   * Explicit readiness endpoint for cluster health and node rejoin verification.
+   */
+  @GetMapping("/health/ready")
+  public ResponseEntity<java.util.Map<String, Object>> ready() {
+    java.util.Map<String, Object> status = new java.util.LinkedHashMap<>();
+    status.put("status", "UP");
+    status.put("ready", true);
+    status.put("workerId", workerId);
+    status.put("timestamp", java.time.Instant.now().toString());
+    return ResponseEntity.ok(status);
+  }
+
+  /**
    * Extract authenticated user's email from security context.
    */
   private String getUserEmail(HttpServletRequest request) {
@@ -159,24 +179,9 @@ public class UrlController {
   }
 
   /**
-   * Extract client IP from request.
+   * Extract client IP from request with proxy spoofing protection.
    */
   private String getClientIp(HttpServletRequest request) {
-    String[] headers = {
-        "X-Forwarded-For",
-        "Proxy-Client-IP",
-        "WL-Proxy-Client-IP",
-        "HTTP_CLIENT_IP",
-        "HTTP_X_FORWARDED_FOR"
-    };
-
-    for (String header : headers) {
-      String ip = request.getHeader(header);
-      if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
-        return ip.split(",")[0];
-      }
-    }
-
-    return request.getRemoteAddr();
+    return clientIpResolver.resolveClientIp(request);
   }
 }

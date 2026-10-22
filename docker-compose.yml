@@ -2,6 +2,11 @@ services:
   postgres:
     image: postgres:15-alpine
     container_name: urlshortener-postgres
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
     environment:
       POSTGRES_DB: url_shortener
       POSTGRES_USER: postgres
@@ -19,6 +24,11 @@ services:
   redis:
     image: redis:7-alpine
     container_name: urlshortener-redis
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
     ports:
       - "6379:6379"
     command: ["redis-server", "--appendonly", "yes"]
@@ -33,6 +43,12 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: urlshortener-node-1
+    restart: on-failure
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 1024M
     environment:
       SERVER_PORT: 8081
       WORKER_NODE_ID: 1
@@ -45,6 +61,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       APP_QUEUE_IMPL: redis
+      APP_SECURITY_TRUSTED_PROXIES: 172.28.0.100
     ports:
       - "8081:8081"
     depends_on:
@@ -58,6 +75,12 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: urlshortener-node-2
+    restart: on-failure
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 1024M
     environment:
       SERVER_PORT: 8082
       WORKER_NODE_ID: 2
@@ -70,6 +93,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       APP_QUEUE_IMPL: redis
+      APP_SECURITY_TRUSTED_PROXIES: 172.28.0.100
     ports:
       - "8082:8082"
     depends_on:
@@ -83,6 +107,12 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: urlshortener-node-3
+    restart: on-failure
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 1024M
     environment:
       SERVER_PORT: 8083
       WORKER_NODE_ID: 3
@@ -95,6 +125,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       APP_QUEUE_IMPL: redis
+      APP_SECURITY_TRUSTED_PROXIES: 172.28.0.100
     ports:
       - "8083:8083"
     depends_on:
@@ -106,14 +137,28 @@ services:
   router:
     image: nginx:alpine
     container_name: urlshortener-router
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
     ports:
       - "8080:8080"
+    networks:
+      default:
+        ipv4_address: 172.28.0.100
     volumes:
       - ./router/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - app-1
       - app-2
       - app-3
+
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
 
 volumes:
   pgdata:

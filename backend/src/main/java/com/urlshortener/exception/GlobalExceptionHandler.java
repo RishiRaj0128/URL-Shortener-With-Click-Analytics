@@ -1,5 +1,7 @@
 package com.urlshortener.exception;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -77,6 +79,8 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, ex.getStatusCode());
     }
     
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
     /**
      * Handle all other exceptions.
      */
@@ -85,7 +89,8 @@ public class GlobalExceptionHandler {
             Exception ex,
             WebRequest request) {
         
-        ex.printStackTrace(); // Log the stack trace so we can debug 500 errors
+        // Suppress verbose stack trace dump to prevent CPU starvation and thread blocking under load
+        log.error("Unhandled exception: {}", ex.getMessage());
         
         ErrorResponse errorResponse = new ErrorResponse(
             HttpStatus.INTERNAL_SERVER_ERROR.value(),

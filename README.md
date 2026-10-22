@@ -373,6 +373,9 @@ Response (200):
 ```bash
 GET /{shortCode}
 
+# Note: The redirect endpoint has no per-IP rate limit (rate limiting covers POST /api/shorten only).
+# Abuse and high-velocity scrapers are detected downstream by the asynchronous anomaly detector.
+
 Response (302):
 Location: https://www.example.com/very/long/url/path
 ```
@@ -658,7 +661,7 @@ This system is engineered to showcase core Data Science and Infrastructure patte
 | **Deduplication Store** | Redis `SET NX` (24h TTL) + PostgreSQL `processed_events` table constraint | Distributed Bloom filters + distributed RocksDB / Redis cluster dedup window |
 | **Database Tier** | Single-instance PostgreSQL with Flyway versioned migrations | Multi-region active-passive or distributed relational database (CockroachDB / AWS Aurora PostgreSQL) |
 | **Cache Tier** | Single Redis instance with Resilience4j circuit breaker fallback | Multi-node Redis Cluster with Sentinel failover and cross-zone read replicas |
-| **Cluster Topology & Routing** | Containerized 3-node cluster orchestrated via `docker-compose.yml` (3 app nodes + Nginx reverse proxy + Redis + Postgres); Nginx OSS uses passive health checks only (`max_fails=1 fail_timeout=5s`, active health probes require Nginx Plus); in-process `TrafficRouter` verified via test suites | Kubernetes ingress / Service Mesh (Envoy / Istio) with automated pod autoscaling and eBPF network routing |
+| **Cluster Topology & Routing** | Containerized 3-node cluster orchestrated via `docker-compose.yml` (3 app nodes + Nginx static upstream with passive health checks + Redis + Postgres); Nginx OSS uses static upstream definition and passive TCP retry only (`max_fails=1 fail_timeout=5s`, active health probes require Nginx Plus or custom gateway); in-process `TrafficRouter` verified via test suites | Kubernetes ingress / Service Mesh (Envoy / Istio) with automated pod autoscaling and eBPF network routing |
 | **Gateway / Link Routing (MAB)** | In-process Multi-Armed Bandit (`BanditRouter` with Thompson Sampling Beta-Bernoulli + $\epsilon$-Greedy) & EWMA node scoring (`EwmaNodeScorer`) | Distributed Contextual Bandits (LinUCB / Deep RL) with real-time bank gateway telemetry and cross-merchant priors |
 | **Anomaly Detection Model** | Real-time Median + MAD Robust Z-Score ($Z = 0.6745 \times \frac{x - \text{median}}{\text{MAD}}$) with cold-start guard (30 samples) & step-change re-baselining (30 buckets) | Streaming feature stores + distributed Isolation Forest / Seasonal ARIMA / streaming Prophet models |
 | **Traffic Generation** | Deterministic synthetic traffic generators & k6 load suites | Real multi-million consumer traffic across payment redirect gateways |
@@ -719,10 +722,10 @@ This system is engineered to showcase core Data Science and Infrastructure patte
     - **Epsilon-Greedy ($\epsilon=0.10$)**: **93.3%** optimal gateway allocation, **82.5%** conversion rate, **33.9** cumulative regret.
     - **Uniform Random (Baseline)**: **32.5%** optimal gateway allocation, **66.8%** conversion rate, **348.9** cumulative regret.
 - **Multi-Node Cluster Deployment & Verified Failover**:
-  - **Cluster Architecture**: Orchestrated via [`docker-compose.yml`](../docker-compose.yml) running 3 app replicas (ports: `8081, 8082, 8083`, distinct Snowflake worker IDs: `1, 2, 3`), single-instance Redis, single-instance Postgres, and an Nginx reverse proxy router ([`router/nginx.conf`](../router/nginx.conf)).
-  - **Passive Health Checking**: Operating under Nginx OSS with passive health checks (`max_fails=1 fail_timeout=5s`) and upstream retry (`proxy_next_upstream error timeout http_500 http_502 http_503 http_504`, `proxy_connect_timeout 150ms`).
-  - **Multi-Run Failover Verification**: Codified in [`bench/failover_multi_runner.mjs`](../bench/failover_multi_runner.mjs). Verified across 5 consecutive runs with node rotation (`node-1` → `node-2` → `node-3` → `node-1` → `node-2`) under 15 VUs load, achieving **0.00% error rate** across 15,000+ requests, strictly meeting the test acceptance threshold (**< 2.0%**).
-  - **Snowflake Worker ID Uniqueness**: Verified across all 3 containers with zero collisions via [`bench/test_cluster_snowflake.mjs`](../bench/test_cluster_snowflake.mjs).text{Stage 1: } 10\% \longrightarrow \text{Stage 2: } 25\% \longrightarrow \text{Stage 3: } 50\% \longrightarrow \text{Stage 4: } 100\%$$
+  - **Cluster Architecture**: Orchestrated via [`docker-compose.yml`](../docker-compose.yml) running 3 app replicas (ports: `8081, 8082, 8083`, distinct Snowflake worker IDs: `1, 2, 3`), single-instance Redis, single-instance Postgres, and Nginx acting as a **static upstream reverse proxy with passive health checks** ([`router/nginx.conf`](../router/nginx.conf)).
+  - **Passive Health Checking**: Operating under Nginx OSS with passive TCP error detection (`max_fails=1 fail_timeout=5s`) and upstream retry (`proxy_next_upstream error timeout http_500 http_502 http_503 http_504`, `proxy_connect_timeout 150ms`).
+  - **Multi-Run Failover Verification**: Codified in [`bench/failover_multi_runner.mjs`](../bench/failover_multi_runner.mjs). Verified across 5 consecutive runs with node rotation (`node-1` → `node-2` → `node-3` → `node-1` → `node-2`) under 15 VUs load, achieving **0.00% error rate** across 15,000+ requests under both 2s and 5s client timeouts.
+  - **Snowflake Worker ID Uniqueness**: 10,000+ IDs verified across all 3 containers with zero collisions and verified Base62 worker bitfields via [`bench/test_cluster_snowflake.mjs`](../bench/test_cluster_snowflake.mjs).
 - **Multi-Armed Bandit Routing (`BanditRouter`) for Multi-Destination Links & Payment Gateways**:
   - Built for multi-destination routing (e.g., routing checkout traffic dynamically across candidate payment gateways like HDFC, ICICI, Axis).
   - **Thompson Sampling (Bayesian Beta-Bernoulli)**: Maintains Beta posterior $\text{Beta}(\alpha_i, \beta_i)$ per gateway ($\alpha = 1 + \text{successes}$, $\beta = 1 + \text{failures}$). Samples $\theta_i \sim \text{Beta}(\alpha_i, \beta_i)$ in $< 0.002$ ms using Marsaglia & Tsang Gamma variates, selecting $\arg\max_i \theta_i$. Achieves optimal $O(\log T)$ logarithmic regret.
@@ -731,11 +734,9 @@ This system is engineered to showcase core Data Science and Infrastructure patte
     - **Thompson Sampling**: **97.9%** optimal gateway allocation, **85.3%** conversion rate, **8.3** cumulative regret.
     - **Epsilon-Greedy ($\epsilon=0.10$)**: **93.3%** optimal gateway allocation, **82.5%** conversion rate, **33.9** cumulative regret.
     - **Uniform Random (Baseline)**: **32.5%** optimal gateway allocation, **66.8%** conversion rate, **348.9** cumulative regret.
-- **Intelligent Traffic Routing Status: Designed For, Not Fully Deployed**:
-  - **Architecture**: A multi-node cluster topology is scripted in [`docker-compose.yml`](../docker-compose.yml) running 3 app replicas (different ports, distinct Snowflake worker IDs: `1, 2, 3`), Redis, Postgres, and an Nginx reverse proxy router ([`router/nginx.conf`](../router/nginx.conf)).
-  - **Dynamic Failover Specification**: Nginx upstream configured with `max_fails=2 fail_timeout=5s` and `proxy_next_upstream error timeout http_502 http_503 http_504`. If an active node crashes, requests are transparently retried against healthy replicas within a 2-second timeout window.
-  - **Automated Failover Drill**: A scripted k6 failover test ([`bench/failover_test.js`](../bench/failover_test.js)) runs steady load (15 VUs) through the router while triggering a container kill, asserting that the failover error rate remains strictly below the stated threshold (**< 2.0%**).
-  - **Transparent Scope Boundary**: In local development without container runtime privileges, the routing engine operates via the in-process [`TrafficRouter.java`](src/main/java/com/urlshortener/routing/TrafficRouter.java) and [`BanditRouter.java`](src/main/java/com/urlshortener/routing/BanditRouter.java), verified by automated test suites ([`EwmaNodeScorerTest.java`](src/test/java/com/urlshortener/routing/EwmaNodeScorerTest.java), [`TrafficRouterFailoverTest.java`](src/test/java/com/urlshortener/routing/TrafficRouterFailoverTest.java), [`BanditRouterTest.java`](src/test/java/com/urlshortener/routing/BanditRouterTest.java)). The containerized multi-node deployment remains **designed for, not fully deployed**.
+- **Intelligent Routing Status & Evolution**:
+  - Open-source Nginx operates as a static upstream with passive checks (cannot execute dynamic EWMA latency scoring or Thompson sampling).
+  - The intelligent adaptive routing engine is implemented in Spring ([`TrafficRouter.java`](backend/src/main/java/com/urlshortener/routing/TrafficRouter.java), [`BanditRouter.java`](backend/src/main/java/com/urlshortener/routing/BanditRouter.java), [`EwmaNodeScorer.java`](backend/src/main/java/com/urlshortener/routing/EwmaNodeScorer.java)), preparing the path for Track 1.1 WebFlux standalone routing service.
 
 ### 6. The Systems Tradeoff: Eventual vs Strong Consistency (Interview Story)
 > **Key Architecture Interview Discussion Point:**
@@ -747,10 +748,79 @@ This system is engineered to showcase core Data Science and Infrastructure patte
 > Being able to justify and defend both ends of the CAP theorem based on domain requirements is a hallmark of senior infrastructure engineering.
 
 ### 7. Failure Injection Drills & INCIDENTS.md
-The three induced failure scenarios are formally documented in [`INCIDENTS.md`](../INCIDENTS.md):
+The four induced failure scenarios are formally documented in [`INCIDENTS.md`](./INCIDENTS.md):
 1. **INC-001**: Redis Cache Latency Spike & Circuit Breaker Trip (DB Fallback < 5ms).
 2. **INC-002**: Queue Consumer Death & Backlog Drain (Zero event loss on restart).
 3. **INC-003**: Coordinated Bot Velocity Attack (Quarantined to audit log).
+4. **INC-004**: Multi-Node Failover & Connect Timeout Tuning (Zero errors across 66,000+ requests).
+
+---
+
+## Performance Benchmarks & Capacity Headroom Knee
+
+All performance benchmarks are executed via k6 open-loop constant arrival rates and codified under [`bench/`](./bench/):
+- **Cache Value Proposition**: The true engineering value of caching is **database connection pool protection and capacity headroom**:
+- **Latency & Capacity Range Disclosures**:
+  - The cold PostgreSQL path hits its **capacity knee at 100 – 200 RPS** as the 10-connection pool per node saturates under concurrent acquisition queuing `[MEASURED: bench/results/cold_saturation_raw.json]`.
+  - The warm Redis cache path hits its **capacity knee at 150 – 200 RPS** (last completely clean rate: 150 RPS with p99 11.24 ms, 0 drops; first dirty rate: 200 RPS with p99 stretching to 50.93 ms and transient Lettuce timeouts) `[MEASURED: bench/results/repeatability_summary.json]`.
+  - In-network container-to-container connection overhead is sub-millisecond: `http_req_blocked` median is **0.009 ms** (p95: **0.028 ms**) and `http_req_connecting` median is **0.000 ms** (p95: **0.000 ms**) `[MEASURED: bench/results/rep_100rps_run_1.json]`. (The earlier "~14 ms DNS + ~15 ms connect" was an artifact of Windows Docker Desktop host port-forwarding and is not present in-network).
+  - The warm Redis cache hit path provides sub-millisecond in-memory lookups, protecting the database connection pool `[MEASURED: bench/results/raw_run_1.json .. raw_run_5.json]`.
+  - Previous claims regarding mock-based runs (cold 1.03x, breaker 1.62/9.3 ms, 876 RPS clean saturation, 66,000 failover requests) targeted a local test-harness mock on port 8089 and are formally RETIRED in [`bench/results/retired/RETIRED_MANIFEST.md`](./bench/results/retired/RETIRED_MANIFEST.md).
+- **Anomaly Detection & Click Attribution Disclosure**:
+  - **19.7% of bot-burst windows** (165 / 836) and **100% of slow-drip and adversarial windows** were counted as real clicks.
+  - Empirical mean run-length measured from generator evaluation runs is **$L = 3.14$ consecutive windows** (replacing the previously assumed 5.6), yielding **289.0 alert episodes/hour** (replacing the previous 162.0 episodes/hour figure) `[MEASURED: eval/ANOMALY_DETECTION_REPORT.md]`.
+- Full details in [`bench/results/BENCHMARK_REPORT.md`](./bench/results/BENCHMARK_REPORT.md).
+
+---
+
+## Production Real Architecture vs Simplified/Mock Implementation
+
+| Component / Path | Production Real Architecture (`app-1..3`) | Simplified / Mock Test-Harness Implementation | Design Tradeoffs & Operational Boundaries |
+| :--- | :--- | :--- | :--- |
+| **Ingress & Routing** | 3-node containerized Spring cluster behind Nginx proxy with passive health checks (`max_fails=1 fail_timeout=5s`) | Standalone Node.js mock (`bench_server.mjs`) on port 8089 returning synthetic 302s | Mock achieves ~5ms latency with zero framework overhead; Real stack incurs 13-filter Spring Security chain, Lettuce Redis I/O, and Tomcat NIO thread scheduling. |
+| **Rate Limiting & Abuse Prevention** | `RateLimitingService`: Token bucket rate limiter applied strictly to `POST /api/shorten` (60 req/min). The redirect endpoint `GET /{shortCode}` has **no per-IP rate limit** to preserve throughput. | N/A | Preserves high-throughput non-blocking redirect lookups without thread synchronization or lock contention on client IP keys; abuse is flagged asynchronously downstream by `ClickAnomalyService`. |
+| **Click Buffer (Publisher Channel)** | `RedisStreamClickChannel`: In-memory `ArrayBlockingQueue(10,000)` buffer in front of 4-worker `ThreadPoolExecutor` calling Redis `XADD` with `MAXLEN ~ 50,000` capping. | `InMemoryClickEventChannel`: Direct in-memory `LinkedBlockingQueue` drained synchronously. | **Size**: 10,000 events (`app.queue.publisher-buffer-capacity`).<br>**Overflow Policy**: Non-blocking drop. Caller thread never stalls; `droppedCount` incremented.<br>**Drop Metric**: Exposed via `getDroppedCount()`.<br>**Crash Loss Window**: In-flight heap buffer events (max 10,000) lost on ungraceful JVM kill; flush latency <2ms under normal operation `[DERIVED: thread pool offer ~5us + Redis XADD RTT 0.25-0.5ms < 2ms drain time; under 200 RPS saturation, queue backlog elevates drain latency]`. |
+| **Redirect Execution Path** | Pure non-blocking O(1) path. No `@Async` annotations or `ThreadPoolExecutor.AbortPolicy` reachable. | N/A | Guarantees zero thread starvation or rejection exceptions propagating to redirect HTTP caller. |
+
+### Redirect Path Call Graph & Executor Reachability
+
+```
+RedirectController.redirect(shortCode, request)
+  │
+  ├─► urlShorteningService.getUrlByShortCode(shortCode)
+  │     └─► [Spring Cache @Cacheable: "urls"]
+  │           ├─► Cache Hit: Lettuce Redis GET (< 3ms)
+  │           └─► Cache Fallback: UrlRepository.findByShortCode(shortCode) (Postgres)
+  │
+  ├─► clickService.getClientIp(request) [In-memory trusted proxy parsing]
+  ├─► snowflakeIdGenerator.nextId()      [In-memory synchronized 64-bit generator]
+  ├─► ClickEvent instantiation           [Immutable record on heap]
+  │
+  ├─► clickEventChannel.publish(event)
+  │     └─► RedisStreamClickChannel.publish(event)
+  │           └─► asyncPublisher.execute(() -> doPublish(event))
+  │                 ├── Queue: ArrayBlockingQueue(10000) [Bounded ring buffer]
+  │                 └── RejectedExecutionHandler: (r, exec) -> { droppedCount.incrementAndGet(); }
+  │                     [NO AbortPolicy, NO @Async, NO caller-blocks]
+  │
+  └─► return ResponseEntity.status(302).header("Location", destination).build()
+```
+
+*Verification*: No `@Async` methods and no executors configured with `AbortPolicy` exist on or are reachable from the redirect execution path. Task rejection in `asyncPublisher` executes a custom drop handler that increments `droppedCount` without throwing exceptions or blocking the caller.
+
+---
+
+## Continuous Integration & Verification Gate
+
+The repository enforces a cryptographic CI verification workflow (`.github/workflows/verify-benchmarks.yml`):
+- **What the CI Gate Guarantees**:
+  - Cryptographically locks raw k6 and multi-seed evaluation artifacts via SHA-256 manifest ([`bench/results/hash_manifest.json`](./bench/results/hash_manifest.json)).
+  - Runs `node bench/run_and_generate_all_benchmarks.mjs --verify-only` to ensure all markdown report tables strictly match raw JSON point streams with **zero manual editing or fabrication**.
+  - Asserts target URL and HTTP status code fidelity (asserting 302 redirects with <1% non-302 error rates).
+  - Executes the full backend test suite (`mvn test`), verifying all unit and integration tests.
+- **What the CI Gate Does NOT Guarantee**:
+  - **Authenticity of Target Stack Identity**: The CI gate checks table-vs-raw consistency and target/status assertions, **not that the target is the genuine production application instead of a test harness mock**. Attestation of genuine application identity requires out-of-band audit and raw file provenance verification.
+  - The CI gate cannot cryptographically attest the hardware execution environment or verify hardware clock isolation without trusted platform module (TPM) remote attestation.
 
 ---
 

@@ -36,22 +36,24 @@ import java.util.stream.Collectors;
  * - Database inserts happen after response is sent
  */
 @Service
-@Transactional
 public class ClickService {
     
     private final ClickRepository clickRepository;
     private final UrlRepository urlRepository;
     private final GeolocationService geolocationService;
     private final Parser uaParser;
+    private final com.urlshortener.util.ClientIpResolver clientIpResolver;
     
     @Autowired
     public ClickService(
             ClickRepository clickRepository,
             UrlRepository urlRepository,
-            GeolocationService geolocationService) throws Exception {
+            GeolocationService geolocationService,
+            @Autowired(required = false) com.urlshortener.util.ClientIpResolver clientIpResolver) throws Exception {
         this.clickRepository = clickRepository;
         this.urlRepository = urlRepository;
         this.geolocationService = geolocationService;
+        this.clientIpResolver = clientIpResolver != null ? clientIpResolver : new com.urlshortener.util.ClientIpResolver("127.0.0.1,::1");
         // ua-parser library for parsing User-Agent strings
         this.uaParser = new Parser();
     }
@@ -111,6 +113,7 @@ public class ClickService {
     /**
      * Get total click count for a URL.
      */
+    @Transactional(readOnly = true)
     public long getClickCount(Long urlId) {
         Long count = clickRepository.countByUrlId(urlId);
         return count != null ? count : 0L;
@@ -120,6 +123,7 @@ public class ClickService {
      * Get analytics for a shortened URL.
      * Aggregates clicks by country, browser, device type, OS, and time.
      */
+    @Transactional(readOnly = true)
     public AnalyticsResponse getAnalytics(String shortCode, String userEmail) {
         Url url = urlRepository.findByShortCode(shortCode)
             .orElseThrow(() -> new UrlShortenerException(
@@ -217,25 +221,10 @@ public class ClickService {
     }
     
     /**
-     * Extract client IP from request, accounting for proxies.
+     * Extract client IP from request, accounting for proxies with spoofing protection.
      */
     public String getClientIp(HttpServletRequest request) {
-        String[] headers = {
-            "X-Forwarded-For",
-            "Proxy-Client-IP",
-            "WL-Proxy-Client-IP",
-            "HTTP_CLIENT_IP",
-            "HTTP_X_FORWARDED_FOR"
-        };
-        
-        for (String header : headers) {
-            String ip = request.getHeader(header);
-            if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
-                return ip.split(",")[0];  // Use first IP if multiple
-            }
-        }
-        
-        return request.getRemoteAddr();
+        return clientIpResolver.resolveClientIp(request);
     }
     
     /**

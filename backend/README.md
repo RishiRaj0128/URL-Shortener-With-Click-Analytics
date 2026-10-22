@@ -373,6 +373,9 @@ Response (200):
 ```bash
 GET /{shortCode}
 
+# Note: The redirect endpoint has no per-IP rate limit (rate limiting covers POST /api/shorten only).
+# Abuse and high-velocity scrapers are detected downstream by the asynchronous anomaly detector.
+
 Response (302):
 Location: https://www.example.com/very/long/url/path
 ```

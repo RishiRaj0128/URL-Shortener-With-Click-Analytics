@@ -1,0 +1,486 @@
+[
+  {
+    "file": "circuit_breaker_raw.json",
+    "type": "raw",
+    "date": "2026-10-03T08:17:41.557Z",
+    "requestCount": 1003,
+    "target": "127.0.0.1:8089 (bench_server.mjs mock)",
+    "statusHistogram": {
+      "200": 1003
+    },
+    "sampleUrls": [
+      "http://127.0.0.1:8089/reset_drill_clock",
+      "http://127.0.0.1:8089/bench_cb_probe"
+    ]
+  },
+  {
+    "file": "circuit_breaker_summary.json",
+    "type": "summary",
+    "requestCount": 1003,
+    "target": "N/A (summary)",
+    "statusHistogram": "N/A"
+  },
+  {
+    "file": "cold_saturation_raw.json",
+    "type": "raw",
+    "date": "2026-10-03T09:24:50.933Z",
+    "requestCount": 4260,
+    "target": "127.0.0.1:8080 (real Nginx router)",
+    "statusHistogram": {
+      "0": 668,
+      "302": 1595,
+      "502": 1997
+    },
+    "sampleUrls": [
+      "http://127.0.0.1:8080/cold_key_4001",
+      "http://127.0.0.1:8080/cold_key_3001",
+      "http://127.0.0.1:8080/cold_key_1"
+    ]
+  },
+  {
+    "file": "cold_saturation_summary.json",
+    "type": "summary",
+    "requestCount": 4260,
+    "target": "N/A (summary)",
+    "statusHistogram": "N/A"
+  },
+  {
+    "file": "direct_node_warm_raw.json",
+    "type": "raw",
+    "date": "2026-10-07T07:51:46.667Z",
+    "requestCount": 20933,
+    "target": "127.0.0.1:8081 (real app node direct)",
+    "statusHistogram": {
+      "0": 20471,
+      "302": 244,
+      "500": 218
+    },
+    "sampleUrls": [
+      "http://127.0.0.1:8081/bench_warm_1",
+      "http://127.0.0.1:8081/bench_warm_2",
+      "http://127.0.0.1:8081/bench_warm_3"
+    ]
+  },
+  {
+    "file": "raw_failover_2s_run_1.json",
+    "type": "raw",
+    "date": "2026-10-03T08:18:26.018Z",
+    "requestCount": 6425,
+    "target": "127.0.0.1:8089 (bench_server.mjs mock)",
+    "statusHistogram": {
+      "200": 1,
+      "302": 6424
+    },
+    "sampleUrls": [
+      "http://127.0.0.1:8089/reset_drill_clock",
+      "http://127.0.0.1:8089/bench_warm_1"
+    ]
+  },
+  {
+    "file": "raw_failover_2s_run_2.json",
+    "type": "raw",
+    "date": "2026-10-03T08:18:52.760Z",
+    "requestCount": 6406,
+    "target": "127.0.0.1:8089 (bench_server.mjs mock)",
+    "statusHistogram": {
+      "200": 1,
+      "302": 6405
+    },
+    "sampleUrls": [
+      "http://127.0.0.1:8089/reset_drill_clock",
+      "http://127.0.0.1:8089/bench_warm_1"
+    ]
+  },
+  {
+    "file": "raw_failover_2s_run_3.json",
+    "type": "raw",
+    "date": "2026-10-03T08:19:21.915Z",
+    "requestCount": 6375,
+    "target": "127.0.0.1:8089 (bench_server.mjs mock)",
+    "statusHistogram": {
+      "200": 1,
+      "302": 6374
+    },
+    "sampleUrls": [
+      "http://127.0.0.1:8089/reset_drill_clock",
+      "http://127.0.0.1:8089/bench_warm_1"
+    ]
+  },
+  {
+    "file": "raw_failover_2s_run_4.json",
+    "type": "raw",
+    "date": "2026-10-03T08:19:48.746Z",
+    "requestCount": 6370,
+    "target": "127.0.0.1:8089 (bench_server.mjs mock)",
+    "statusHistogram": {
+      "200": 1,
+      "302": 6369
+    },
+    "sampleUrls": [
+      "http://127.0.0.1:8089/reset_drill_clock",
+      "http://127.0.0.1:8089/bench_warm_1"
+    ]
+  },
+  {
+    "file": "raw_failover_2s_run_5.json",
+    "type": "raw",
+    "date": "2026-10-03T08:20:15.438Z",
+    "requestCount": 6416,
+    "target": "127.0.0.1:8089 (bench_server.mjs mock)",
+    "statusHistogram": {
+      "200": 1,
+      "302": 6415
+    },
+    "sampleUrls": [
+      "http://127.0.0.1:8089/reset_drill_clock",
+      "http://127.0.0.1:8089/bench_warm_1"
+    ]
+  },
+  {
+    "file": "raw_failover_5s_run_1.json",
+    "type": "raw",
+    "date": "2026-10-03T08:20:42.217Z",
+    "requestCount": 6427,
+    "target": "127.0.0.1:8089 (bench_server.mjs mock)",
+    "statusHistogram": {
+      "200": 1,
+      "302": 6426
+    },
+    "sampleUrls": [
+      "http://127.0.0.1:8089/reset_drill_clock",
+      "http://127.0.0.1:8089/bench_warm_1"
+    ]
+  },
+  {
+    "file": "raw_failover_5s_run_2.json",
+    "type": "raw",
+    "date": "2026-10-03T08:21:08.889Z",
+    "requestCount": 6415,
+    "target": "127.0.0.1:8089 (bench_server.mjs mock)",
+    "statusHistogram": {
+      "200": 1,
+      "302": 6414
+    },
+    "sampleUrls": [
+      "http://127.0.0.1:8089/reset_drill_clock",
+      "http://127.0.0.1:8089/bench_warm_1"
+    ]
+  },
+  {
+    "file": "raw_failover_5s_run_3.json",
+    "type": "raw",
+    "date": "2026-10-03T08:21:35.572Z",
+    "requestCount": 6375,
+    "target": "127.0.0.1:8089 (bench_server.mjs mock)",
+    "statusHistogram": {
+      "200": 1,
+      "302": 6374
+    },
+    "sampleUrls": [
+      "http://127.0.0.1:8089/reset_drill_clock",
+      "http://127.0.0.1:8089/bench_warm_1"
+    ]
+  },
+  {
+    "file": "raw_failover_5s_run_4.json",
+    "type": "raw",
+    "date": "2026-10-03T08:22:03.559Z",
+    "requestCount": 6353,
+    "target": "127.0.0.1:8089 (bench_server.mjs mock)",
+    "statusHistogram": {
+      "200": 1,
+      "302": 6352
+    },
+    "sampleUrls": [
+      "http://127.0.0.1:8089/reset_drill_clock",
+      "http://127.0.0.1:8089/bench_warm_1"
+    ]
+  },
+  {
+    "file": "raw_failover_5s_run_5.json",
+    "type": "raw",
+    "date": "2026-10-03T08:22:30.376Z",
+    "requestCount": 6410,
+    "target": "127.0.0.1:8089 (bench_server.mjs mock)",
+    "statusHistogram": {
+      "200": 1,
+      "302": 6409
+    },
+    "sampleUrls": [
+      "http://127.0.0.1:8089/reset_drill_clock",
+      "http://127.0.0.1:8089/bench_warm_1"
+    ]
+  },
+  {
+    "file": "raw_run_1.json",
+    "type": "raw",
+    "date": "2026-09-30T16:13:45.672Z",
+    "requestCount": 2016,
+    "target": "127.0.0.1:8080 (real Nginx router)",
+    "statusHistogram": {
+      "302": 2016
+    },
+    "sampleUrls": [
+      "http://127.0.0.1:8080/bench_warm_1"
+    ]
+  },
+  {
+    "file": "raw_run_2.json",
+    "type": "raw",
+    "date": "2026-09-30T16:14:39.030Z",
+    "requestCount": 3255,
+    "target": "127.0.0.1:8080 (real Nginx router)",
+    "statusHistogram": {
+      "302": 3255
+    },
+    "sampleUrls": [
+      "http://127.0.0.1:8080/bench_warm_1"
+    ]
+  },
+  {
+    "file": "raw_run_3.json",
+    "type": "raw",
+    "date": "2026-09-30T16:15:28.736Z",
+    "requestCount": 3555,
+    "target": "127.0.0.1:8080 (real Nginx router)",
+    "statusHistogram": {
+      "302": 3555
+    },
+    "sampleUrls": [
+      "http://127.0.0.1:8080/bench_warm_1"
+    ]
+  },
+  {
+    "file": "raw_run_4.json",
+    "type": "raw",
+    "date": "2026-09-30T16:16:18.783Z",
+    "requestCount": 3232,
+    "target": "127.0.0.1:8080 (real Nginx router)",
+    "statusHistogram": {
+      "302": 3232
+    },
+    "sampleUrls": [
+      "http://127.0.0.1:8080/bench_warm_1"
+    ]
+  },
+  {
+    "file": "raw_run_5.json",
+    "type": "raw",
+    "date": "2026-09-30T16:17:11.226Z",
+    "requestCount": 3134,
+    "target": "127.0.0.1:8080 (real Nginx router)",
+    "statusHistogram": {
+      "302": 3134
+    },
+    "sampleUrls": [
+      "http://127.0.0.1:8080/bench_warm_1"
+    ]
+  },
+  {
+    "file": "redirect_cold_raw.json",
+    "type": "raw",
+    "date": "2026-10-03T08:25:44.002Z",
+    "requestCount": 597,
+    "target": "127.0.0.1:8089 (bench_server.mjs mock)",
+    "statusHistogram": {
+      "404": 597
+    },
+    "sampleUrls": [
+      "http://127.0.0.1:8089/cold_bench_5476736",
+      "http://127.0.0.1:8089/cold_bench_597111",
+      "http://127.0.0.1:8089/cold_bench_9355650"
+    ]
+  },
+  {
+    "file": "redirect_cold_summary.json",
+    "type": "summary",
+    "requestCount": 3000,
+    "target": "N/A (summary)",
+    "statusHistogram": "N/A"
+  },
+  {
+    "file": "redirect_mixed_raw.json",
+    "type": "raw",
+    "date": "2026-10-03T08:17:04.248Z",
+    "requestCount": 7603,
+    "target": "127.0.0.1:8089 (bench_server.mjs mock)",
+    "statusHistogram": {
+      "302": 6129,
+      "404": 1474
+    },
+    "sampleUrls": [
+      "http://127.0.0.1:8089/bench_warm_1",
+      "http://127.0.0.1:8089/bench_warm_2",
+      "http://127.0.0.1:8089/bench_warm_3"
+    ]
+  },
+  {
+    "file": "redirect_mixed_summary.json",
+    "type": "summary",
+    "requestCount": 7603,
+    "target": "N/A (summary)",
+    "statusHistogram": "N/A"
+  },
+  {
+    "file": "redirect_warm_raw.json",
+    "type": "raw",
+    "date": "2026-10-03T08:25:28.039Z",
+    "requestCount": 3004,
+    "target": "127.0.0.1:8089 (bench_server.mjs mock)",
+    "statusHistogram": {
+      "302": 3004
+    },
+    "sampleUrls": [
+      "http://127.0.0.1:8089/bench_warm_1",
+      "http://127.0.0.1:8089/bench_warm_2",
+      "http://127.0.0.1:8089/bench_warm_3"
+    ]
+  },
+  {
+    "file": "redirect_warm_summary.json",
+    "type": "summary",
+    "requestCount": 3004,
+    "target": "N/A (summary)",
+    "statusHistogram": "N/A"
+  },
+  {
+    "file": "sample_raw.json",
+    "type": "raw",
+    "date": "2026-09-30T15:37:10.485Z",
+    "requestCount": 4,
+    "target": "127.0.0.1:8080 (real Nginx router)",
+    "statusHistogram": {
+      "0": 1,
+      "302": 3
+    },
+    "sampleUrls": [
+      "http://127.0.0.1:8080/bench_warm_1"
+    ]
+  },
+  {
+    "file": "saturation_raw.json",
+    "type": "raw",
+    "date": "2026-10-03T08:18:03.308Z",
+    "requestCount": 11249,
+    "target": "127.0.0.1:8089 (bench_server.mjs mock)",
+    "statusHistogram": {
+      "302": 11249
+    },
+    "sampleUrls": [
+      "http://127.0.0.1:8089/bench_warm_2",
+      "http://127.0.0.1:8089/bench_warm_1",
+      "http://127.0.0.1:8089/bench_warm_3"
+    ]
+  },
+  {
+    "file": "saturation_summary.json",
+    "type": "summary",
+    "requestCount": 20933,
+    "target": "N/A (summary)",
+    "statusHistogram": "N/A"
+  },
+  {
+    "file": "summary_failover_2s_run_1.json",
+    "type": "summary",
+    "requestCount": 6425,
+    "target": "N/A (summary)",
+    "statusHistogram": "N/A"
+  },
+  {
+    "file": "summary_failover_2s_run_2.json",
+    "type": "summary",
+    "requestCount": 6406,
+    "target": "N/A (summary)",
+    "statusHistogram": "N/A"
+  },
+  {
+    "file": "summary_failover_2s_run_3.json",
+    "type": "summary",
+    "requestCount": 6375,
+    "target": "N/A (summary)",
+    "statusHistogram": "N/A"
+  },
+  {
+    "file": "summary_failover_2s_run_4.json",
+    "type": "summary",
+    "requestCount": 6370,
+    "target": "N/A (summary)",
+    "statusHistogram": "N/A"
+  },
+  {
+    "file": "summary_failover_2s_run_5.json",
+    "type": "summary",
+    "requestCount": 6416,
+    "target": "N/A (summary)",
+    "statusHistogram": "N/A"
+  },
+  {
+    "file": "summary_failover_5s_run_1.json",
+    "type": "summary",
+    "requestCount": 6427,
+    "target": "N/A (summary)",
+    "statusHistogram": "N/A"
+  },
+  {
+    "file": "summary_failover_5s_run_2.json",
+    "type": "summary",
+    "requestCount": 6415,
+    "target": "N/A (summary)",
+    "statusHistogram": "N/A"
+  },
+  {
+    "file": "summary_failover_5s_run_3.json",
+    "type": "summary",
+    "requestCount": 6375,
+    "target": "N/A (summary)",
+    "statusHistogram": "N/A"
+  },
+  {
+    "file": "summary_failover_5s_run_4.json",
+    "type": "summary",
+    "requestCount": 6353,
+    "target": "N/A (summary)",
+    "statusHistogram": "N/A"
+  },
+  {
+    "file": "summary_failover_5s_run_5.json",
+    "type": "summary",
+    "requestCount": 6410,
+    "target": "N/A (summary)",
+    "statusHistogram": "N/A"
+  },
+  {
+    "file": "warm_saturation_raw.json",
+    "type": "raw",
+    "date": "2026-10-03T09:26:06.173Z",
+    "requestCount": 23773,
+    "target": "127.0.0.1:8080 (real Nginx router)",
+    "statusHistogram": {
+      "0": 1314,
+      "302": 3177,
+      "502": 19282
+    },
+    "sampleUrls": [
+      "http://localhost:8080/bench_warm_3",
+      "http://localhost:8080/bench_warm_1",
+      "http://localhost:8080/bench_warm_2"
+    ]
+  },
+  {
+    "file": "warm_saturation_raw_rerun.json",
+    "type": "raw",
+    "date": "2026-10-07T07:48:58.157Z",
+    "requestCount": 24507,
+    "target": "127.0.0.1:8080 (real Nginx router)",
+    "statusHistogram": {
+      "0": 791,
+      "302": 456,
+      "502": 23260
+    },
+    "sampleUrls": [
+      "http://localhost:8080/bench_warm_2",
+      "http://localhost:8080/bench_warm_3",
+      "http://localhost:8080/bench_warm_1"
+    ]
+  }
+]

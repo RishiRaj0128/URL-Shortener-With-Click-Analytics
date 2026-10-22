@@ -1,0 +1,239 @@
+[
+  {
+    "condition_id": "a_direct_app1",
+    "condition_name": "direct app-1",
+    "target": "http://app-1:8081",
+    "repetitions": [
+      {
+        "rep": 1,
+        "p50": 1.992213,
+        "p90": 3.5216597000000007,
+        "p95": 4.8869959000000005,
+        "p99": 10.894112770000014,
+        "avg": 2.5022856610000055,
+        "dropped_iterations": 0,
+        "tcp_retrans_delta": 0,
+        "nginx_total_requests": 0,
+        "slow_requests_count": 0,
+        "slow_histogram": {
+          "1s-2s": 0,
+          "2s-3s": 0,
+          "3s+": 0
+        },
+        "common_upstreams": {},
+        "common_pids": {},
+        "ejection_events": 0,
+        "max_rt_sec": 0,
+        "max_uct_sec": 0,
+        "raw_k6_file": "bench/results/nginx_tail_a_direct_app1_rep_1.json",
+        "slow_sample": []
+      },
+      {
+        "rep": 2,
+        "p50": 1.854335,
+        "p90": 3.004479,
+        "p95": 3.902046,
+        "p99": 9.144514,
+        "avg": 2.192472697883682,
+        "dropped_iterations": 0,
+        "tcp_retrans_delta": 0,
+        "nginx_total_requests": 0,
+        "slow_requests_count": 0,
+        "slow_histogram": {
+          "1s-2s": 0,
+          "2s-3s": 0,
+          "3s+": 0
+        },
+        "common_upstreams": {},
+        "common_pids": {},
+        "ejection_events": 0,
+        "max_rt_sec": 0,
+        "max_uct_sec": 0,
+        "raw_k6_file": "bench/results/nginx_tail_a_direct_app1_rep_2.json",
+        "slow_sample": []
+      },
+      {
+        "rep": 3,
+        "p50": 1.726955,
+        "p90": 3.009191,
+        "p95": 4.147481,
+        "p99": 8.341013,
+        "avg": 2.078986137310449,
+        "dropped_iterations": 0,
+        "tcp_retrans_delta": 0,
+        "nginx_total_requests": 0,
+        "slow_requests_count": 0,
+        "slow_histogram": {
+          "1s-2s": 0,
+          "2s-3s": 0,
+          "3s+": 0
+        },
+        "common_upstreams": {},
+        "common_pids": {},
+        "ejection_events": 0,
+        "max_rt_sec": 0,
+        "max_uct_sec": 0,
+        "raw_k6_file": "bench/results/nginx_tail_a_direct_app1_rep_3.json",
+        "slow_sample": []
+      }
+    ]
+  },
+  {
+    "condition_id": "b_nginx_1_upstream",
+    "condition_name": "via nginx with only app-1 upstream",
+    "target": "http://router:8080",
+    "repetitions": [
+      {
+        "rep": 1,
+        "p50": 1.607078,
+        "p90": 2.927903,
+        "p95": 4.029682,
+        "p99": 8.90395,
+        "avg": 2.037401574237631,
+        "dropped_iterations": 0,
+        "tcp_retrans_delta": 0,
+        "nginx_total_requests": 0,
+        "slow_requests_count": 0,
+        "slow_histogram": {
+          "1s-2s": 0,
+          "2s-3s": 0,
+          "3s+": 0
+        },
+        "common_upstreams": {},
+        "common_pids": {},
+        "ejection_events": 0,
+        "max_rt_sec": 0,
+        "max_uct_sec": 0,
+        "raw_k6_file": "bench/results/nginx_tail_b_nginx_1_upstream_rep_1.json",
+        "slow_sample": []
+      },
+      {
+        "rep": 2,
+        "p50": 1.67609,
+        "p90": 3.07808,
+        "p95": 4.377725,
+        "p99": 11.206665,
+        "avg": 2.2503502759540037,
+        "dropped_iterations": 0,
+        "tcp_retrans_delta": 0,
+        "nginx_total_requests": 0,
+        "slow_requests_count": 0,
+        "slow_histogram": {
+          "1s-2s": 0,
+          "2s-3s": 0,
+          "3s+": 0
+        },
+        "common_upstreams": {},
+        "common_pids": {},
+        "ejection_events": 0,
+        "max_rt_sec": 0,
+        "max_uct_sec": 0,
+        "raw_k6_file": "bench/results/nginx_tail_b_nginx_1_upstream_rep_2.json",
+        "slow_sample": []
+      },
+      {
+        "rep": 3,
+        "p50": 1.613507,
+        "p90": 2.882531,
+        "p95": 3.940662,
+        "p99": 8.625281,
+        "avg": 2.026155272787875,
+        "dropped_iterations": 0,
+        "tcp_retrans_delta": 0,
+        "nginx_total_requests": 0,
+        "slow_requests_count": 0,
+        "slow_histogram": {
+          "1s-2s": 0,
+          "2s-3s": 0,
+          "3s+": 0
+        },
+        "common_upstreams": {},
+        "common_pids": {},
+        "ejection_events": 0,
+        "max_rt_sec": 0,
+        "max_uct_sec": 0,
+        "raw_k6_file": "bench/results/nginx_tail_b_nginx_1_upstream_rep_3.json",
+        "slow_sample": []
+      }
+    ]
+  },
+  {
+    "condition_id": "c_nginx_3_upstreams",
+    "condition_name": "via nginx with 3 upstreams",
+    "target": "http://router:8080",
+    "repetitions": [
+      {
+        "rep": 1,
+        "p50": 1.983032,
+        "p90": 3.44296,
+        "p95": 4.530687,
+        "p99": 9.362956,
+        "avg": 2.3732425740709897,
+        "dropped_iterations": 0,
+        "tcp_retrans_delta": 0,
+        "nginx_total_requests": 0,
+        "slow_requests_count": 0,
+        "slow_histogram": {
+          "1s-2s": 0,
+          "2s-3s": 0,
+          "3s+": 0
+        },
+        "common_upstreams": {},
+        "common_pids": {},
+        "ejection_events": 0,
+        "max_rt_sec": 0,
+        "max_uct_sec": 0,
+        "raw_k6_file": "bench/results/nginx_tail_c_nginx_3_upstreams_rep_1.json",
+        "slow_sample": []
+      },
+      {
+        "rep": 2,
+        "p50": 1.827579,
+        "p90": 3.313061,
+        "p95": 4.454531,
+        "p99": 9.45501,
+        "avg": 2.2421097690384872,
+        "dropped_iterations": 0,
+        "tcp_retrans_delta": 0,
+        "nginx_total_requests": 0,
+        "slow_requests_count": 0,
+        "slow_histogram": {
+          "1s-2s": 0,
+          "2s-3s": 0,
+          "3s+": 0
+        },
+        "common_upstreams": {},
+        "common_pids": {},
+        "ejection_events": 0,
+        "max_rt_sec": 0,
+        "max_uct_sec": 0,
+        "raw_k6_file": "bench/results/nginx_tail_c_nginx_3_upstreams_rep_2.json",
+        "slow_sample": []
+      },
+      {
+        "rep": 3,
+        "p50": 1.413903,
+        "p90": 2.460045,
+        "p95": 3.257902,
+        "p99": 7.602981,
+        "avg": 1.7919192914514137,
+        "dropped_iterations": 0,
+        "tcp_retrans_delta": 0,
+        "nginx_total_requests": 0,
+        "slow_requests_count": 0,
+        "slow_histogram": {
+          "1s-2s": 0,
+          "2s-3s": 0,
+          "3s+": 0
+        },
+        "common_upstreams": {},
+        "common_pids": {},
+        "ejection_events": 0,
+        "max_rt_sec": 0,
+        "max_uct_sec": 0,
+        "raw_k6_file": "bench/results/nginx_tail_c_nginx_3_upstreams_rep_3.json",
+        "slow_sample": []
+      }
+    ]
+  }
+]

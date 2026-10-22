@@ -1,13 +1,273 @@
 {
-  "totalClassifications": 497,
-  "tp": 39,
-  "fp": 0,
-  "tn": 423,
-  "fn": 35,
-  "precision": 1,
-  "recall": 0.527027027027027,
-  "f1": 0.6902654867256637,
-  "accuracy": 0.9295774647887324,
-  "falsePositiveRate": 0,
-  "avgLatencyMicros": "87.36"
+  "evaluationSeeds": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "summaryTable": [
+    {
+      "Class": "NORMAL",
+      "Precision (%)": "80.2 ± 1.4%",
+      "Recall (%)": "98.7 ± 0.1%",
+      "F1-Score": "0.885 ± 0.009",
+      "Detection Delay": "N/A",
+      "Assessment": "PASS"
+    },
+    {
+      "Class": "LEGIT_SURGE",
+      "Precision (%)": "90.0 ± 3.7%",
+      "Recall (%)": "82.0 ± 4.2%",
+      "F1-Score": "0.857 ± 0.021",
+      "Detection Delay": "N/A",
+      "Assessment": "PASS"
+    },
+    {
+      "Class": "BOT_BURST",
+      "Precision (%)": "99.8 ± 0.5%",
+      "Recall (%)": "80.3 ± 3.1%",
+      "F1-Score": "0.890 ± 0.019",
+      "Detection Delay": "170 ± 12 ms",
+      "Assessment": "PASS"
+    },
+    {
+      "Class": "SLOW_DRIP_BOTNET",
+      "Precision (%)": "0.0 ± 0.0%",
+      "Recall (%)": "0.0 ± 0.0%",
+      "F1-Score": "0.000 ± 0.000",
+      "Detection Delay": "N/A",
+      "Assessment": "DOCUMENTED LIMITATION (Low Recall)"
+    },
+    {
+      "Class": "SCANNER",
+      "Precision (%)": "89.1 ± 1.0%",
+      "Recall (%)": "100.0 ± 0.0%",
+      "F1-Score": "0.943 ± 0.006",
+      "Detection Delay": "406 ± 28 ms",
+      "Assessment": "PASS"
+    },
+    {
+      "Class": "ADVERSARIAL_EVASIVE",
+      "Precision (%)": "0.0 ± 0.0%",
+      "Recall (%)": "0.0 ± 0.0%",
+      "F1-Score": "0.000 ± 0.000",
+      "Detection Delay": "Undetected (0 flags)",
+      "Assessment": "DOCUMENTED FAILURE (0% Recall)"
+    }
+  ],
+  "aggregatedConfusion": {
+    "NORMAL": {
+      "NORMAL": 5406,
+      "LEGIT_SURGE": 1,
+      "BOT_BURST": 1,
+      "SLOW_DRIP_BOTNET": 0,
+      "SCANNER": 67,
+      "ADVERSARIAL_EVASIVE": 0
+    },
+    "LEGIT_SURGE": {
+      "NORMAL": 338,
+      "LEGIT_SURGE": 1541,
+      "BOT_BURST": 0,
+      "SLOW_DRIP_BOTNET": 0,
+      "SCANNER": 0,
+      "ADVERSARIAL_EVASIVE": 0
+    },
+    "BOT_BURST": {
+      "NORMAL": 148,
+      "LEGIT_SURGE": 17,
+      "BOT_BURST": 671,
+      "SLOW_DRIP_BOTNET": 0,
+      "SCANNER": 0,
+      "ADVERSARIAL_EVASIVE": 0
+    },
+    "SLOW_DRIP_BOTNET": {
+      "NORMAL": 535,
+      "LEGIT_SURGE": 157,
+      "BOT_BURST": 0,
+      "SLOW_DRIP_BOTNET": 0,
+      "SCANNER": 0,
+      "ADVERSARIAL_EVASIVE": 0
+    },
+    "SCANNER": {
+      "NORMAL": 0,
+      "LEGIT_SURGE": 0,
+      "BOT_BURST": 0,
+      "SLOW_DRIP_BOTNET": 0,
+      "SCANNER": 550,
+      "ADVERSARIAL_EVASIVE": 0
+    },
+    "ADVERSARIAL_EVASIVE": {
+      "NORMAL": 318,
+      "LEGIT_SURGE": 0,
+      "BOT_BURST": 0,
+      "SLOW_DRIP_BOTNET": 0,
+      "SCANNER": 0,
+      "ADVERSARIAL_EVASIVE": 0
+    }
+  },
+  "hardCaseEvaluation": [
+    {
+      "seed": 6,
+      "natTotal": 41,
+      "natRecall": 100,
+      "viralTotal": 41,
+      "viralRecall": 73.2,
+      "lowSpikeTotal": 28,
+      "lowSpikeRecall": 35.7,
+      "evasiveTotal": 29,
+      "evasiveRecall": 0
+    },
+    {
+      "seed": 7,
+      "natTotal": 41,
+      "natRecall": 97.6,
+      "viralTotal": 41,
+      "viralRecall": 73.2,
+      "lowSpikeTotal": 28,
+      "lowSpikeRecall": 71.4,
+      "evasiveTotal": 29,
+      "evasiveRecall": 0
+    },
+    {
+      "seed": 8,
+      "natTotal": 41,
+      "natRecall": 100,
+      "viralTotal": 41,
+      "viralRecall": 46.3,
+      "lowSpikeTotal": 28,
+      "lowSpikeRecall": 50,
+      "evasiveTotal": 28,
+      "evasiveRecall": 0
+    },
+    {
+      "seed": 9,
+      "natTotal": 41,
+      "natRecall": 100,
+      "viralTotal": 41,
+      "viralRecall": 68.3,
+      "lowSpikeTotal": 28,
+      "lowSpikeRecall": 64.3,
+      "evasiveTotal": 36,
+      "evasiveRecall": 0
+    },
+    {
+      "seed": 10,
+      "natTotal": 41,
+      "natRecall": 100,
+      "viralTotal": 41,
+      "viralRecall": 70.7,
+      "lowSpikeTotal": 28,
+      "lowSpikeRecall": 85.7,
+      "evasiveTotal": 33,
+      "evasiveRecall": 0
+    },
+    {
+      "seed": 11,
+      "natTotal": 41,
+      "natRecall": 100,
+      "viralTotal": 41,
+      "viralRecall": 70.7,
+      "lowSpikeTotal": 28,
+      "lowSpikeRecall": 89.3,
+      "evasiveTotal": 34,
+      "evasiveRecall": 0
+    },
+    {
+      "seed": 12,
+      "natTotal": 41,
+      "natRecall": 100,
+      "viralTotal": 41,
+      "viralRecall": 75.6,
+      "lowSpikeTotal": 28,
+      "lowSpikeRecall": 53.6,
+      "evasiveTotal": 28,
+      "evasiveRecall": 0
+    },
+    {
+      "seed": 13,
+      "natTotal": 41,
+      "natRecall": 100,
+      "viralTotal": 41,
+      "viralRecall": 85.4,
+      "lowSpikeTotal": 28,
+      "lowSpikeRecall": 64.3,
+      "evasiveTotal": 37,
+      "evasiveRecall": 0
+    },
+    {
+      "seed": 14,
+      "natTotal": 41,
+      "natRecall": 100,
+      "viralTotal": 41,
+      "viralRecall": 85.4,
+      "lowSpikeTotal": 28,
+      "lowSpikeRecall": 46.4,
+      "evasiveTotal": 42,
+      "evasiveRecall": 0
+    },
+    {
+      "seed": 15,
+      "natTotal": 41,
+      "natRecall": 100,
+      "viralTotal": 41,
+      "viralRecall": 68.3,
+      "lowSpikeTotal": 28,
+      "lowSpikeRecall": 85.7,
+      "evasiveTotal": 30,
+      "evasiveRecall": 0
+    }
+  ],
+  "prCurveResults": [
+    {
+      "operatingPoint": "Aggressive (burstMaxIpHits: 6, maxConc: 0.20)",
+      "calibPrec": 100,
+      "calibRec": 82.3,
+      "calibF1": 0.903,
+      "testPrec": 99.9,
+      "testRec": 80.3,
+      "testF1": 0.89
+    },
+    {
+      "operatingPoint": "Moderate-High (burstMaxIpHits: 7, maxConc: 0.24)",
+      "calibPrec": 100,
+      "calibRec": 82.3,
+      "calibF1": 0.903,
+      "testPrec": 99.9,
+      "testRec": 80.3,
+      "testF1": 0.89
+    },
+    {
+      "operatingPoint": "Tuned Baseline (burstMaxIpHits: 9, maxConc: 0.30)",
+      "calibPrec": 100,
+      "calibRec": 82.3,
+      "calibF1": 0.903,
+      "testPrec": 99.9,
+      "testRec": 80.3,
+      "testF1": 0.89
+    },
+    {
+      "operatingPoint": "Conservative (burstMaxIpHits: 11, maxConc: 0.36)",
+      "calibPrec": 100,
+      "calibRec": 82.3,
+      "calibF1": 0.903,
+      "testPrec": 99.9,
+      "testRec": 80.3,
+      "testF1": 0.89
+    },
+    {
+      "operatingPoint": "Very Conservative (burstMaxIpHits: 14, maxConc: 0.45)",
+      "calibPrec": 100,
+      "calibRec": 82.3,
+      "calibF1": 0.903,
+      "testPrec": 99.9,
+      "testRec": 80.3,
+      "testF1": 0.89
+    }
+  ]
 }

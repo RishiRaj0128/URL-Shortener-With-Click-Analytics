@@ -1,0 +1,90 @@
+[
+  {
+    "experiment": "a",
+    "name": "baseline",
+    "config": {
+      "APP_QUEUE_PUBLISH_ENABLED": "true",
+      "SPRING_REDIS_TIMEOUT": "50ms",
+      "SPRING_DATA_REDIS_TIMEOUT": "50ms",
+      "SPRING_CACHE_TYPE": "redis"
+    },
+    "p50": 88.886639,
+    "p90": 5589.882039,
+    "p95": 6814.057686,
+    "p99": 8805.976646799996,
+    "avg": 2023.2466514253258,
+    "dropped_iterations": 1833,
+    "longest_gc_pause_ms": 0,
+    "lettuce_command_timeouts": 5344,
+    "hikari_active": 1,
+    "hikari_pending": 0,
+    "cache_hit_ratio": 0.689854191980559,
+    "raw_file": "bench/results/discrim_a_raw.json"
+  },
+  {
+    "experiment": "b",
+    "name": "publish_disabled",
+    "config": {
+      "APP_QUEUE_PUBLISH_ENABLED": "false",
+      "SPRING_REDIS_TIMEOUT": "50ms",
+      "SPRING_DATA_REDIS_TIMEOUT": "50ms",
+      "SPRING_CACHE_TYPE": "redis"
+    },
+    "p50": 79.427907,
+    "p90": 3316.0740966,
+    "p95": 4538.547756599993,
+    "p99": 6943.167031799998,
+    "avg": 1104.1780156812067,
+    "dropped_iterations": 1132,
+    "longest_gc_pause_ms": 0,
+    "lettuce_command_timeouts": 3208,
+    "hikari_active": 0,
+    "hikari_pending": 0,
+    "cache_hit_ratio": 0.7772569945197577,
+    "raw_file": "bench/results/discrim_b_raw.json"
+  },
+  {
+    "experiment": "c",
+    "name": "timeout_500ms",
+    "config": {
+      "APP_QUEUE_PUBLISH_ENABLED": "true",
+      "SPRING_REDIS_TIMEOUT": "500ms",
+      "SPRING_DATA_REDIS_TIMEOUT": "500ms",
+      "SPRING_CACHE_TYPE": "redis"
+    },
+    "p50": 3128.520198,
+    "p90": 7468.6956435,
+    "p95": 9344.887128999999,
+    "p99": 11705.787084600002,
+    "avg": 3789.161140050814,
+    "dropped_iterations": 2612,
+    "longest_gc_pause_ms": 0,
+    "lettuce_command_timeouts": 6814,
+    "hikari_active": 1,
+    "hikari_pending": 0,
+    "cache_hit_ratio": 0.4498627482641692,
+    "raw_file": "bench/results/discrim_c_raw.json"
+  },
+  {
+    "experiment": "d",
+    "name": "cache_bypassed",
+    "config": {
+      "APP_QUEUE_PUBLISH_ENABLED": "true",
+      "SPRING_REDIS_TIMEOUT": "50ms",
+      "SPRING_DATA_REDIS_TIMEOUT": "50ms",
+      "SPRING_CACHE_TYPE": "none"
+    },
+    "p50": 10417.1645845,
+    "p90": 17306.4595146,
+    "p95": 19443.293901800003,
+    "p99": 21462.380826540008,
+    "avg": 9806.862759949287,
+    "dropped_iterations": 7848,
+    "longest_gc_pause_ms": 0,
+    "lettuce_command_timeouts": 1269,
+    "hikari_active": 1,
+    "hikari_pending": 0,
+    "cache_hit_ratio": 0,
+    "raw_file": "bench/results/discrim_d_raw.json"
+  }
+]

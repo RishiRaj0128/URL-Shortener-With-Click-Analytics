@@ -1,0 +1,162 @@
+{
+  "metadata": {
+    "generatedAt": "2026-10-07T09:00:00.000Z",
+    "gitCommitSha": "bbc069a751558b01059e9d44793fb9df3cdff641",
+    "k6Version": "k6.exe v2.2.0 (commit/00a9a1b7f5, go1.26.5, windows/amd64)",
+    "nodeVersion": "v22.23.2",
+    "hostSpecs": {
+      "platform": "win32",
+      "arch": "x64",
+      "cpus": "12 logical cores (12th Gen Intel Core i5-12450H)",
+      "dockerLimits": "7.5 CPUs pinned across cluster services (62.5% host capacity)",
+      "environment": "Windows 11 Local Host / Docker Desktop WSL2"
+    },
+    "ciGateGuarantees": "Guarantees markdown tables match raw per-run k6 JSON point streams with 0 manual editing. Asserts raw files record target and status histogram, rejects mock targets without harness tag, and fails on >1% non-302 on success paths.",
+    "ciGateNonGuarantees": "Cannot verify hardware clock isolation or network interface provenance without remote TPM attestation."
+  },
+  "artifacts": {
+    "cold_saturation_raw.json": {
+      "sha256": "ee5ee41e4e5c37377ff7013c2c7147bc474ea4aa3779bb4516c033f1c422fd7d",
+      "bytes": 16972365,
+      "target": "http://127.0.0.1:8080/cold_key_4001",
+      "statusHistogram": {
+        "0": 668,
+        "302": 1595,
+        "502": 1997
+      },
+      "scenarioType": "saturation"
+    },
+    "cold_saturation_raw.json.gz": {
+      "sha256": "5f92dcecb7de04a8af947f9cbac10fe1cc06bcae88aa0b057da479e71699330a",
+      "bytes": 437121
+    },
+    "cold_saturation_summary.json": {
+      "sha256": "1adf65d2d5858deb66e519899021532532f7a4062b00c88291cc8f61d7487b66",
+      "bytes": 4869
+    },
+    "direct_node_postfix_warm_raw.json": {
+      "sha256": "0abbbb4412a21b27765e5718f0778c12a92ec940a879237eda7ccdaac4f170b5",
+      "bytes": 29674250,
+      "target": "http://127.0.0.1:8081/bench_warm_3",
+      "statusHistogram": {
+        "0": 6689,
+        "302": 51
+      },
+      "scenarioType": "diagnostic-ramp"
+    },
+    "direct_node_postfix_warm_raw.json.gz": {
+      "sha256": "c0641a800c2a02d22c88302783397f81cb72620598033f579b2b4022e6637d72",
+      "bytes": 654634
+    },
+    "direct_node_warm_raw.json": {
+      "sha256": "f05eef991f13b9cfcf65dd5c00826c63ee794df008418bca7af09e09fc6b6668",
+      "bytes": 105662062,
+      "target": "http://127.0.0.1:8081/bench_warm_1",
+      "statusHistogram": {
+        "0": 20471,
+        "302": 244,
+        "500": 218
+      },
+      "scenarioType": "diagnostic-ramp"
+    },
+    "direct_node_warm_raw.json.gz": {
+      "sha256": "d668fb66d127af59913c4395c0d3ff7b7e781c8af50e54a57367ed21a09732f3",
+      "bytes": 1810801
+    },
+    "raw_run_1.json": {
+      "sha256": "2893430543b3c4ae5bedefd068fc9471547005727e7e494b553dddfe1f82c9b2",
+      "bytes": 7666822,
+      "target": "http://127.0.0.1:8080/bench_warm_1",
+      "statusHistogram": {
+        "302": 2016
+      },
+      "scenarioType": "success-path"
+    },
+    "raw_run_1.json.gz": {
+      "sha256": "525e413f3bdfccf66b45b36ac04f8805b2e37117f16850a26084299db099efcb",
+      "bytes": 174961
+    },
+    "raw_run_2.json": {
+      "sha256": "7c64db5dd18f2910323e4d6286d0ea78b4157b2bde37e43d055f434683279dda",
+      "bytes": 12367265,
+      "target": "http://127.0.0.1:8080/bench_warm_1",
+      "statusHistogram": {
+        "302": 3255
+      },
+      "scenarioType": "success-path"
+    },
+    "raw_run_2.json.gz": {
+      "sha256": "2b95f7362f41d589dbd91248a962c38a2c1907a343af814d60cb48bacde43a09",
+      "bytes": 260383
+    },
+    "raw_run_3.json": {
+      "sha256": "73f305ca7310211dfb1ce5fa07647c8654758e5f3755b4e1fac6518b60074fbf",
+      "bytes": 13504263,
+      "target": "http://127.0.0.1:8080/bench_warm_1",
+      "statusHistogram": {
+        "302": 3555
+      },
+      "scenarioType": "success-path"
+    },
+    "raw_run_3.json.gz": {
+      "sha256": "ed157269d8d951467e4ee05976d42bb03aa5c50105f2f1bd4e12bd0d2ab728f1",
+      "bytes": 287655
+    },
+    "raw_run_4.json": {
+      "sha256": "0525b6658ab636e055705a8cbf4e119d9ab68726533ac748315dd21f1daed7d1",
+      "bytes": 12279970,
+      "target": "http://127.0.0.1:8080/bench_warm_1",
+      "statusHistogram": {
+        "302": 3232
+      },
+      "scenarioType": "success-path"
+    },
+    "raw_run_4.json.gz": {
+      "sha256": "3534ab81021ce8fa8ba64979d802790f0e199506062b37e88ebde29c5315bfe2",
+      "bytes": 271114
+    },
+    "raw_run_5.json": {
+      "sha256": "5491a95c60f84d885e706cc63e3be597f036df095ef80760170298f69d780a70",
+      "bytes": 11907882,
+      "target": "http://127.0.0.1:8080/bench_warm_1",
+      "statusHistogram": {
+        "302": 3134
+      },
+      "scenarioType": "success-path"
+    },
+    "raw_run_5.json.gz": {
+      "sha256": "7ec9749a31dd3669e133800b3b5ac18afcf919af7437b971c2162c620a68d86b",
+      "bytes": 261317
+    },
+    "saturation_summary.json": {
+      "sha256": "02681fabc45a48833f7e60c32db646b89a5cb19c517a1aeab144a8bea3d5e1de",
+      "bytes": 4915
+    },
+    "warm_saturation_raw.json": {
+      "sha256": "9b03c464aa4c32e17dfbb4be4dbf3455b5517792dcd12457cd3f2ab54ef4371d",
+      "bytes": 93322467,
+      "target": "http://localhost:8080/bench_warm_3",
+      "statusHistogram": {
+        "0": 1314,
+        "302": 3177,
+        "502": 19282
+      },
+      "scenarioType": "saturation"
+    },
+    "warm_saturation_raw.json.gz": {
+      "sha256": "cd010e219a1ed34053c485d6fdc2466b92af088cfdb62aefc5603f21233bc0e7",
+      "bytes": 1777620
+    },
+    "warm_saturation_raw_rerun.json": {
+      "sha256": "202232cd1ba8f92cee8605aeaf11f091f11ac5fefc754383f24286533bd4dddf",
+      "bytes": 96397537,
+      "target": "http://localhost:8080/bench_warm_2",
+      "statusHistogram": {
+        "0": 791,
+        "302": 456,
+        "502": 23260
+      },
+      "scenarioType": "saturation"
+    }
+  }
+}

@@ -22,7 +22,9 @@ public class EwmaNodeScorer {
 
     private static final Logger log = LoggerFactory.getLogger(EwmaNodeScorer.class);
 
-    private final double alpha; // Smoothing factor (0.0 < alpha <= 1.0)
+    // Alpha smoothing factor derived from time constant tau: alpha = 1 - exp(-dt / tau)
+    // where tau is the characteristic time constant (e.g. tau = 4.48s for alpha = 0.2 at dt = 1s)
+    private final double alpha;
     private final double defaultLatencyMs;
     private final double errorPenaltyMultiplier;
 
@@ -39,6 +41,16 @@ public class EwmaNodeScorer {
         this.alpha = alpha;
         this.defaultLatencyMs = defaultLatencyMs;
         this.errorPenaltyMultiplier = errorPenaltyMultiplier;
+    }
+
+    /**
+     * Factory constructor specifying characteristic time constant tau and observation interval dt.
+     * alpha = 1.0 - Math.exp(-dtSec / tauSec)
+     */
+    public static EwmaNodeScorer fromTimeConstant(double tauSec, double dtSec, double defaultLatencyMs, double errorPenaltyMultiplier) {
+        if (tauSec <= 0.0) throw new IllegalArgumentException("Time constant tau must be positive");
+        double calculatedAlpha = 1.0 - Math.exp(-dtSec / tauSec);
+        return new EwmaNodeScorer(calculatedAlpha, defaultLatencyMs, errorPenaltyMultiplier);
     }
 
     public void registerNode(String nodeId) {

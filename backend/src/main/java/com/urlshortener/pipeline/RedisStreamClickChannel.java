@@ -41,6 +41,9 @@ public class RedisStreamClickChannel implements ClickEventChannel {
     private final AtomicLong publishedCount = new AtomicLong(0);
     private final AtomicLong droppedCount = new AtomicLong(0);
 
+    @Value("${app.queue.publish-enabled:true}")
+    private boolean publishEnabled = true;
+
     @Autowired
     public RedisStreamClickChannel(
             StringRedisTemplate redisTemplate,
@@ -83,7 +86,7 @@ public class RedisStreamClickChannel implements ClickEventChannel {
 
     @Override
     public boolean publish(ClickEvent event) {
-        if (event == null) {
+        if (!publishEnabled || event == null) {
             return false;
         }
 

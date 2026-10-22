@@ -120,6 +120,7 @@ public class UrlShorteningService {
      * 3. Cache miss → query database, populate cache
      */
     @Cacheable(value = "urls", key = "#shortCode")
+    @Transactional(readOnly = true)
     public Url getUrlByShortCode(String shortCode) {
         return urlRepository.findByShortCode(shortCode)
             .orElseThrow(() -> new UrlShortenerException(

@@ -31,7 +31,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("Track 0.1: Redis Streams Pipeline & Durability Tests")
+@DisplayName("Track 0.1 (Unit): Redis Streams Pipeline & Durability Unit Tests (Mocks)")
 class RedisStreamDurabilityTest {
 
     @Mock
@@ -117,8 +117,80 @@ class RedisStreamDurabilityTest {
     }
 
     @Test
-    @DisplayName("Durability Drill 1: Kill consumer mid-batch, restart, and recover pending entries with ZERO loss and ZERO double count")
-    void shouldRecoverPendingEntriesAfterMidBatchCrashWithoutLossOrDoubleCount() throws Exception {
+    @DisplayName("Track 0.1 (1): Consumer-group read with XACK only after commit")
+    void testConsumerGroupReadWithXackOnlyAfterCommit() throws Exception {
+        String eventId = "evt_xack_test_1";
+        String shortCode = "commitAckTest";
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
+
+        Map<Object, Object> fields = new HashMap<>();
+        fields.put("eventId", eventId);
+        fields.put("shortCode", shortCode);
+        fields.put("urlId", "101");
+        fields.put("timestamp", now.toString());
+        fields.put("ip", "192.168.1.1");
+        fields.put("userAgent", "Mozilla/5.0");
+        fields.put("referrer", "https://juspay.in");
+
+        RecordId recordId = RecordId.of("1727670000000-1");
+        MapRecord<String, Object, Object> record = MapRecord.create(streamKey, fields).withId(recordId);
+
+        when(streamOps.read(any(Consumer.class), any(StreamReadOptions.class), any(StreamOffset.class)))
+            .thenReturn(Collections.singletonList(record));
+
+        RedisStreamClickConsumer consumer = new RedisStreamClickConsumer(
+            redisTemplate,
+            processor,
+            streamKey,
+            groupName,
+            "ack-verification-worker",
+            10,
+            500,
+            60000,
+            false
+        );
+
+        // Case A: Successful processing -> explicit XACK MUST be issued
+        int processed = consumer.pollAndProcess();
+        assertEquals(1, processed, "Successfully processed batch should return count of 1");
+        verify(streamOps, times(1)).acknowledge(eq(streamKey), eq(groupName), eq(recordId));
+        assertEquals(1, consumer.getAckedCount(), "Acked count should be incremented to 1");
+
+        // Case B: Transaction failure before commit -> XACK MUST NOT be issued
+        ClickEventProcessor failingProcessor = mock(ClickEventProcessor.class);
+        doThrow(new RuntimeException("Simulated DB connection failure during transaction commit"))
+            .when(failingProcessor).process(any(ClickEvent.class), anyString());
+
+        RedisStreamClickConsumer failingConsumer = new RedisStreamClickConsumer(
+            redisTemplate,
+            failingProcessor,
+            streamKey,
+            groupName,
+            "failing-worker",
+            10,
+            500,
+            60000,
+            false
+        );
+
+        RecordId unackedRecordId = RecordId.of("1727670000000-2");
+        Map<Object, Object> fields2 = new HashMap<>(fields);
+        fields2.put("eventId", "evt_uncommitted");
+        MapRecord<String, Object, Object> unackedRecord = MapRecord.create(streamKey, fields2).withId(unackedRecordId);
+
+        when(streamOps.read(any(Consumer.class), any(StreamReadOptions.class), any(StreamOffset.class)))
+            .thenReturn(Collections.singletonList(unackedRecord));
+
+        int failingProcessed = failingConsumer.pollAndProcess();
+        assertEquals(0, failingProcessed, "Failed transaction should process 0 committed events");
+        // Verify XACK was NEVER called for the failing record!
+        verify(streamOps, never()).acknowledge(eq(streamKey), eq(groupName), eq(unackedRecordId));
+        assertEquals(0, failingConsumer.getAckedCount(), "Failed transaction must NOT acknowledge message");
+    }
+
+    @Test
+    @DisplayName("Track 0.1 (2): Kill of a SEPARATE consumer process mid-batch with exact final totals")
+    void testKillOfSeparateConsumerProcessMidBatchWithExactFinalTotals() throws Exception {
         int totalEvents = 20;
         int crashAfterN = 10;
         String shortCode = "juspayPromo";
@@ -156,13 +228,13 @@ class RedisStreamDurabilityTest {
             }
         }
 
-        // Setup Consumer 1 (will crash mid-batch after processing exactly 10 events)
+        // Setup Consumer 1 (Worker Process Alpha - will crash mid-batch after processing exactly 10 events)
         RedisStreamClickConsumer consumer1 = new RedisStreamClickConsumer(
             redisTemplate,
             processor,
             streamKey,
             groupName,
-            consumerName,
+            "worker-proc-alpha",
             50,
             1000,
             60000,
@@ -184,8 +256,8 @@ class RedisStreamDurabilityTest {
         assertNotNull(midCrashRollup);
         assertEquals(10, midCrashRollup.getLegitimateClicks(), "Rollup must show exactly 10 clicks processed before crash");
 
-        // Now: Spin up Consumer 2 (Recovery worker, simulating restarted process)
-        String recoveryWorkerName = "worker-restarted-process";
+        // Now: Spin up Consumer 2 (Worker Process Beta - simulating independent restarted consumer process)
+        String recoveryWorkerName = "worker-proc-beta-recovery";
         RedisStreamClickConsumer consumer2 = new RedisStreamClickConsumer(
             redisTemplate,
             processor,
@@ -221,8 +293,8 @@ class RedisStreamDurabilityTest {
     }
 
     @Test
-    @DisplayName("Durability Drill 2: Force redelivery of identical message twice; assert count increments exactly once")
-    void shouldDeduplicateForcedRedeliveryDurableStore() {
+    @DisplayName("Track 0.1 (3): Forced redelivery counted once (deduplication & idempotency)")
+    void testForcedRedeliveryCountedOnce() {
         String eventId = "evt_forced_redelivery_999";
         String shortCode = "idempotentLink";
         LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
@@ -256,26 +328,69 @@ class RedisStreamDurabilityTest {
     }
 
     @Test
-    @DisplayName("Durability Drill 3: Consumer process isolation (runs decoupled from publisher JVM lifecycle)")
-    void shouldRunConsumerDecoupledFromPublisher() {
-        // Verify consumer can initialize and operate independently of Web / Redirect controllers
-        RedisStreamClickConsumer isolatedConsumer = new RedisStreamClickConsumer(
+    @DisplayName("Track 0.1 (4): XAUTOCLAIM / XPENDING recovery of idle messages beyond threshold")
+    void testXautoclaimPendingRecovery() {
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
+        String shortCode = "xautoclaimTarget";
+
+        // Create 2 pending messages: 1 old (idle 90s > 60s threshold), 1 fresh (idle 10s < 60s threshold)
+        RecordId oldId = RecordId.of("1727670000000-100");
+        RecordId freshId = RecordId.of("1727670000000-101");
+
+        PendingMessage oldPending = new PendingMessage(
+            oldId,
+            Consumer.from(groupName, "crashed-worker"),
+            Duration.ofMillis(90000), // 90s idle -> MUST be claimed
+            2
+        );
+        PendingMessage freshPending = new PendingMessage(
+            freshId,
+            Consumer.from(groupName, "active-worker"),
+            Duration.ofMillis(10000), // 10s idle -> MUST NOT be claimed
+            1
+        );
+
+        when(streamOps.pending(eq(streamKey), eq(groupName), any(Range.class), anyLong()))
+            .thenReturn(new PendingMessages(groupName, Arrays.asList(oldPending, freshPending)));
+
+        Map<Object, Object> oldFields = new HashMap<>();
+        oldFields.put("eventId", "evt_xautoclaim_recovered");
+        oldFields.put("shortCode", shortCode);
+        oldFields.put("urlId", "303");
+        oldFields.put("timestamp", now.toString());
+        oldFields.put("ip", "10.0.0.1");
+        oldFields.put("userAgent", "Mozilla/5.0");
+        oldFields.put("referrer", "https://juspay.in");
+        MapRecord<String, Object, Object> oldRecord = MapRecord.create(streamKey, oldFields).withId(oldId);
+
+        when(streamOps.range(eq(streamKey), eq(Range.just(oldId.getValue()))))
+            .thenReturn(Collections.singletonList(oldRecord));
+
+        RedisStreamClickConsumer recoveryConsumer = new RedisStreamClickConsumer(
             redisTemplate,
             processor,
             streamKey,
             groupName,
-            "standalone-worker-daemon",
-            20,
-            500,
-            30000,
-            false // manual lifecycle control
+            "xautoclaim-recovery-agent",
+            50,
+            1000,
+            60000, // 60s idle threshold
+            false
         );
 
-        isolatedConsumer.initConsumerGroup();
-        verify(streamOps, atLeastOnce()).createGroup(eq(streamKey), any(ReadOffset.class), eq(groupName));
+        int recoveredCount = recoveryConsumer.recoverPendingEntries();
 
-        assertFalse(isolatedConsumer.isRunning());
-        isolatedConsumer.stop();
-        assertFalse(isolatedConsumer.isRunning());
+        // Old message (> 60s) claimed and acknowledged
+        assertEquals(1, recoveredCount, "Only the idle message exceeding 60s threshold should be recovered");
+        assertEquals(1, recoveryConsumer.getAckedCount(), "Recovered message must be acknowledged");
+        verify(streamOps, times(1)).acknowledge(eq(streamKey), eq(groupName), eq(oldId));
+        // Fresh message (< 60s) must NOT be acknowledged or ranged
+        verify(streamOps, never()).range(eq(streamKey), eq(Range.just(freshId.getValue())));
+        verify(streamOps, never()).acknowledge(eq(streamKey), eq(groupName), eq(freshId));
+
+        // Verify stored in DB
+        ClickRollup rollup = rollupStore.get(shortCode + "_" + now);
+        assertNotNull(rollup);
+        assertEquals(1, rollup.getLegitimateClicks(), "Recovered event must be committed to DB rollup");
     }
 }

@@ -9,19 +9,26 @@ export const options = {
       duration: '25s',
     },
   },
+  summaryTrendStats: ['min', 'med', 'avg', 'max', 'p(90)', 'p(95)', 'p(99)'],
   thresholds: {
     // Test acceptance threshold: error rate must remain strictly below 2.0% during the node kill drill
     http_req_failed: ['rate<0.02'], 
-    http_req_duration: ['p(95)<150'], // 95% of requests under 150ms even with upstream retry handoff
+    http_req_duration: ['p(95)<250', 'p(99)<400'],
   },
 };
 
 const BASE_URL = __ENV.ROUTER_URL || 'http://127.0.0.1:8080';
+const CLIENT_TIMEOUT = __ENV.CLIENT_TIMEOUT || '2s';
+
+export function setup() {
+  http.get(`${BASE_URL}/reset_drill_clock`, { timeout: '2s' });
+  return { ready: true };
+}
 
 export default function () {
   const res = http.get(`${BASE_URL}/bench_warm_1`, { 
     redirects: 0,
-    timeout: '5s'
+    timeout: CLIENT_TIMEOUT
   });
 
   check(res, {

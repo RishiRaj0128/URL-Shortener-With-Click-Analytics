@@ -98,4 +98,22 @@ class EwmaNodeScorerTest {
         assertTrue(fastFraction > 0.80,
             "Fast node should receive > 80% of traffic, actual: " + (fastFraction * 100) + "%");
     }
+
+    @Test
+    @DisplayName("Should correctly calculate alpha from time constant tau: alpha = 1 - exp(-dt / tau)")
+    void shouldCalculateAlphaFromTimeConstant() {
+        // tau = 5s, dt = 1s -> alpha = 1 - exp(-1/5) = 1 - exp(-0.2) = 1 - 0.81873 = 0.18127
+        EwmaNodeScorer tauScorer = EwmaNodeScorer.fromTimeConstant(5.0, 1.0, 10.0, 20.0);
+        tauScorer.registerNode("node-tau");
+
+        // Initial = 10.0. Observation = 100.0.
+        // Expected new = 0.18127 * 100 + (1 - 0.18127) * 10 = 18.127 + 8.1873 = 26.314
+        tauScorer.recordObservation("node-tau", 100.0, false);
+        double actual = tauScorer.getMetricsSnapshot("node-tau").latencyEwma();
+        assertEquals(26.314, actual, 0.05, "Latency should decay according to time constant tau = 5s");
+
+        // Negative or zero tau must throw IllegalArgumentException
+        assertThrows(IllegalArgumentException.class, () -> EwmaNodeScorer.fromTimeConstant(0.0, 1.0, 10.0, 20.0));
+        assertThrows(IllegalArgumentException.class, () -> EwmaNodeScorer.fromTimeConstant(-2.0, 1.0, 10.0, 20.0));
+    }
 }

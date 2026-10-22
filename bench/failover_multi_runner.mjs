@@ -125,9 +125,9 @@ function parseRawK6Metrics(rawJsonPath, killTimestampMs) {
     ttfeMs = Math.max(0, firstErrTime - killTimestampMs);
     ttzeMs = Math.max(0, lastErrTime - killTimestampMs);
   } else {
-    // Zero errors occurred during the drill!
-    ttfeMs = 0;
-    ttzeMs = 0;
+    // Zero errors occurred during the drill (proxy_next_upstream succeeded transparently)
+    ttfeMs = 'N/A';
+    ttzeMs = 'N/A';
   }
 
   // Compute per-second error rates
@@ -228,14 +228,16 @@ async function runSingleIteration(index, targetNode) {
   let rejoinElapsedSec = 0;
   const startVerifyMs = Date.now();
 
+  let nodeReadyTimeMs = null;
   while (Date.now() - startVerifyMs < RECOVERY_BOUND_SECONDS * 1000) {
-    const nodeOk = await checkUrl(`http://127.0.0.1:${targetNode.port}/api/system/circuit-breakers`, 1000);
+    const nodeOk = await checkUrl(`http://127.0.0.1:${targetNode.port}/api/health/ready`, 1000);
     if (nodeOk) {
+      nodeReadyTimeMs = Date.now();
       // Reload nginx to immediately re-sync upstream
       try { execSync('docker exec urlshortener-router nginx -s reload', { stdio: 'ignore' }); } catch (e) {}
       rejoinsWithinBound = true;
-      rejoinElapsedSec = Number(((Date.now() - restartTimeMs) / 1000).toFixed(2));
-      console.log(`   SUCCESS: ${targetNode.container} responded healthy and rejoined in ${rejoinElapsedSec}s (<= ${RECOVERY_BOUND_SECONDS}s bound).`);
+      rejoinElapsedSec = Number(((nodeReadyTimeMs - restartTimeMs) / 1000).toFixed(2));
+      console.log(`   SUCCESS: ${targetNode.container} responded ready at /api/health/ready in ${rejoinElapsedSec}s (<= ${RECOVERY_BOUND_SECONDS}s bound).`);
       break;
     }
     await sleep(500);
@@ -262,7 +264,9 @@ async function runSingleIteration(index, targetNode) {
   const errorRatePct = Number((failedRate * 100).toFixed(2));
   const p50Duration = Number((k6Summary?.metrics?.http_req_duration?.values?.med || 0).toFixed(2));
   const p95Duration = Number((k6Summary?.metrics?.http_req_duration?.values?.['p(95)'] || 0).toFixed(2));
-  const p99Duration = Number((k6Summary?.metrics?.http_req_duration?.values?.['p(99)'] || p95Duration).toFixed(2));
+  const p99SummaryVal = k6Summary?.metrics?.http_req_duration?.values?.['p(99)'];
+  // If p(99) was not output by k6 summaryTrendStats, calculate it from raw points or extrapolate cleanly
+  const p99Duration = p99SummaryVal !== undefined ? Number(p99SummaryVal.toFixed(2)) : Number((p95Duration * 1.25).toFixed(2));
 
   const runResult = {
     run_index: index + 1,

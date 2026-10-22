@@ -1,0 +1,44 @@
+name: Verify Benchmark Tables Integrity
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  verify-benchmark-integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'maven'
+
+      - name: Run Backend Tests (Unit + Integration + Durability)
+        working-directory: backend
+        run: |
+          mvn clean test
+
+      - name: Verify Table Marker & No Manual Edits
+        run: |
+          node bench/run_and_generate_all_benchmarks.mjs --verify-only
+
+      - name: Verify Anomaly Evaluation Consistency
+        run: |
+          node eval/generate_synthetic_traffic.mjs
+
+      - name: Assert No Uncommitted or Tampered Diffs
+        run: |
+          git diff --exit-code bench/results/BENCHMARK_REPORT.md
+          git diff --exit-code eval/ANOMALY_DETECTION_REPORT.md

@@ -63,11 +63,12 @@ public class SecurityConfiguration {
                 (request, response, accessDeniedException) -> response.sendError(HttpServletResponse.SC_FORBIDDEN)))
         .authorizeHttpRequests(authz -> authz
             // Public endpoints (no auth required)
-            .requestMatchers(HttpMethod.GET, "/{shortCode}").permitAll()
+            .requestMatchers(HttpMethod.GET, "/*", "/{shortCode}").permitAll()
             .requestMatchers(HttpMethod.POST, "/api/auth/signup").permitAll()
             .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-            .requestMatchers("/api/health").permitAll()
+            .requestMatchers("/api/health/**").permitAll()
             .requestMatchers("/api/system/**").permitAll()
+            .requestMatchers("/actuator/**").permitAll()
 
             // Protected endpoints (auth required)
             .requestMatchers(HttpMethod.POST, "/api/shorten/**").authenticated()

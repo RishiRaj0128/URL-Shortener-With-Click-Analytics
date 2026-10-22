@@ -129,7 +129,10 @@ public class RedisStreamClickConsumer implements Runnable {
     public void run() {
         while (running.get() && !Thread.currentThread().isInterrupted()) {
             try {
-                pollAndProcess();
+                int count = pollAndProcess();
+                if (count == 0) {
+                    Thread.sleep(25);
+                }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 break;
@@ -151,9 +154,11 @@ public class RedisStreamClickConsumer implements Runnable {
      */
     public int pollAndProcess() throws InterruptedException {
         try {
+            // Non-blocking stream read prevents Lettuce command timeout on idle streams
+            StreamReadOptions readOpts = StreamReadOptions.empty().count(batchSize);
             List<MapRecord<String, Object, Object>> records = redisTemplate.opsForStream().read(
                 Consumer.from(groupName, consumerName),
-                StreamReadOptions.empty().count(batchSize).block(Duration.ofMillis(pollTimeoutMs)),
+                readOpts,
                 StreamOffset.create(streamKey, ReadOffset.lastConsumed()) // ">"
             );
 
@@ -185,6 +190,7 @@ public class RedisStreamClickConsumer implements Runnable {
                 throw new RuntimeException(e);
             }
             log.error("Redis stream poll error: {}", e.getMessage());
+            Thread.sleep(100);
             return 0;
         }
     }

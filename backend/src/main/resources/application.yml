@@ -13,6 +13,7 @@ spring:
       connection-timeout: 10000
 
   jpa:
+    open-in-view: false
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: update
@@ -32,14 +33,16 @@ spring:
     host: ${REDIS_HOST:localhost}
     port: ${REDIS_PORT:6379}
     password: ${REDIS_PASSWORD:}
-    timeout: 2000
+    timeout: 50ms
 
   data:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
-      timeout: 2000
+      timeout: 50ms
+      lettuce:
+        shutdown-timeout: 100ms
 
   cache:
     type: redis
@@ -55,6 +58,9 @@ server:
   port: ${SERVER_PORT:8080}
   servlet:
     context-path: /
+  tomcat:
+    mbeanregistry:
+      enabled: true
   compression:
     enabled: true
     min-response-size: 1024
@@ -101,14 +107,30 @@ app:
     consumer-name: ${REDIS_STREAM_CONSUMER:worker-1}
     max-stream-length: 50000
     batch-size: 50
-    poll-timeout-ms: 1000
+    poll-timeout-ms: ${APP_QUEUE_POLL_TIMEOUT_MS:25}
     idle-threshold-ms: 60000
     publisher-threads: 4
     publisher-buffer-capacity: 10000
+    publish-enabled: ${APP_QUEUE_PUBLISH_ENABLED:true}
   consumer:
     enabled: ${APP_CONSUMER_ENABLED:true}
   routing:
     mode: ${APP_ROUTING_MODE:round_robin}
+  security:
+    trusted-proxies: ${APP_SECURITY_TRUSTED_PROXIES:172.28.0.100,127.0.0.1}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
 
 ---
 # Production profile

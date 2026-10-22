@@ -1,38 +1,53 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 
+/**
+ * Open-loop benchmark for Cache-Miss (Cold Database Path) Redirects.
+ * Evaluates constant-arrival-rate at identical RPS to cache-hit (warm),
+ * followed by a ramp to identify database connection-pool saturation.
+ */
+const TARGET_RPS = parseInt(__ENV.TARGET_RPS || '200', 10);
+
 export const options = {
-  stages: [
-    { duration: '3s', target: 5 },   // Ramp-up to 5 VUs
-    { duration: '10s', target: 20 }, // Peak at 20 VUs
-    { duration: '3s', target: 0 },   // Ramp-down
-  ],
+  scenarios: {
+    constant_rate_comparison: {
+      executor: 'constant-arrival-rate',
+      rate: TARGET_RPS,
+      timeUnit: '1s',
+      duration: '15s',
+      preAllocatedVUs: 30,
+      maxVUs: 150,
+    },
+  },
+  summaryTrendStats: ['min', 'med', 'avg', 'max', 'p(90)', 'p(95)', 'p(99)'],
   thresholds: {
-    http_req_failed: ['rate<0.05'], // Server errors must stay under 5%
+    http_req_failed: ['rate<0.05'],
+    http_req_duration: ['p(95)<150'],
   },
 };
 
 const BASE_URL = __ENV.TARGET_URL || 'http://localhost:8080';
 
 export default function () {
-  // Generate random short codes to exercise database cache-miss lookup path
-  const randomSuffix = Math.floor(Math.random() * 1000000);
-  const code = `cold_bench_${randomSuffix}`;
+  // Query distinct pre-seeded database keys (cold_key_1 through cold_key_5000)
+  // Each VU request queries a unique key to exercise the cold DB path returning 302
+  const keyIndex = ((__VU * 1000) + __ITER) % 5000 + 1;
+  const code = `cold_key_${keyIndex}`;
   
   const res = http.get(`${BASE_URL}/${code}`, { 
     redirects: 0,
-    responseCallback: http.expectedStatuses(404, 302),
+    timeout: '3s',
+    responseCallback: http.expectedStatuses(302),
   });
   
   check(res, {
-    'status is 404 or 302': (r) => r.status === 404 || r.status === 302,
+    'status is 302': (r) => r.status === 302,
   });
-
-  sleep(0.05); // 50ms pacing
 }
 
 export function handleSummary(data) {
+  const summaryPath = __ENV.SUMMARY_PATH || 'bench/results/redirect_cold_summary.json';
   return {
-    'bench/results/redirect_cold_summary.json': JSON.stringify(data, null, 2),
+    [summaryPath]: JSON.stringify(data, null, 2),
   };
 }

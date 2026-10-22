@@ -1,0 +1,301 @@
+﻿  the  space 96504K,  99% used [0x00000000f5550000, 0x00000000fb37d118, 0x00000000fb38e000)
+ Metaspace       used 125105K, committed 126016K, reserved 1179648K
+  class space    used 17408K, committed 17792K, reserved 1048576K
+
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - Failed to publish event evt_7TjMkRQXcf to Redis stream clicks:stream: Redis command timed out
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - Failed to publish event evt_7TjMkQrLMW to Redis stream clicks:stream: Redis command timed out
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - Failed to publish event evt_7TjMkSHL0q to Redis stream clicks:stream: Redis command timed out
+2026-10-07 09:36:22 - Failed to publish event evt_7TjMkRi8ki to Redis stream clicks:stream: Redis command timed out
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - Failed to publish event evt_7TjMkRQXce to Redis stream clicks:stream: Redis command timed out
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - Redis stream poll error: Redis command timed out
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - Failed to publish event evt_7TjMkUGWvI to Redis stream clicks:stream: Redis command timed out
+2026-10-07 09:36:22 - Failed to publish event evt_7TjMkT88P2 to Redis stream clicks:stream: Redis command timed out
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - Failed to publish event evt_7TjMkV7KJU to Redis stream clicks:stream: Redis command timed out
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - Failed to publish event evt_7TjMkV7KJV to Redis stream clicks:stream: Redis command timed out
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - Failed to publish event evt_7TjMkVy7hg to Redis stream clicks:stream: Redis command timed out
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - Failed to publish event evt_7TjMkWXJxo to Redis stream clicks:stream: Redis command timed out
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - Failed to publish event evt_7TjMkXfiU4 to Redis stream clicks:stream: Redis command timed out
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - Redis stream poll error: Redis command timed out
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - Failed to publish event evt_7TjMkYWVsG to Redis stream clicks:stream: Redis command timed out
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - Failed to publish event evt_7TjMkYEukC to Redis stream clicks:stream: Redis command timed out
+2026-10-07 09:36:23 - Failed to publish event evt_7TjMkXxJc8 to Redis stream clicks:stream: Redis command timed out
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - Failed to publish event evt_7TjMkZ5i8O to Redis stream clicks:stream: Redis command timed out
+2026-10-07 09:36:23 - Failed to publish event evt_7TjMkYo70K to Redis stream clicks:stream: Redis command timed out
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - Redis stream poll error: Redis command timed out
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - Failed to publish event evt_7TjMkR8wUa to Redis stream clicks:stream: Redis command timed out
+2026-10-07 09:36:23 - Failed to publish event evt_7TjMkZeuOW to Redis stream clicks:stream: Redis command timed out
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - Failed to publish event evt_7TjMkZeuOX to Redis stream clicks:stream: Redis command timed out
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:22 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - Failed to publish event evt_7TjMkYWVsH to Redis stream clicks:stream: Redis command timed out
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - Failed to publish event evt_7TjMkaVhmi to Redis stream clicks:stream: Redis command timed out
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - Failed to publish event evt_7TjMkb4u2q to Redis stream clicks:stream: Redis command timed out
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - Redis stream poll error: Redis command timed out
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - Failed to publish event evt_7TjMkbe6Iy to Redis stream clicks:stream: Redis command timed out
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - Failed to publish event evt_7TjMkcDIZ6 to Redis stream clicks:stream: Redis command timed out
+2026-10-07 09:36:23 - Failed to publish event evt_7TjMkbMVAu to Redis stream clicks:stream: Redis command timed out
+2026-10-07 09:36:23 - Failed to publish event evt_7TjMkcUthA to Redis stream clicks:stream: Redis command timed out
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - Failed to publish event evt_7TjMkdLh5M to Redis stream clicks:stream: Redis command timed out
+2026-10-07 09:36:23 - Failed to publish event evt_7TjMkddIDQ to Redis stream clicks:stream: Redis command timed out
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - Failed to publish event evt_7TjMkRzjsm to Redis stream clicks:stream: Redis command timed out
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - Redis stream poll error: Redis command timed out
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - Failed to publish event evt_7TjMkaE6ee to Redis stream clicks:stream: Redis command timed out
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - Failed to publish event evt_7TjMkeU5bd to Redis stream clicks:stream: Redis command timed out
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - Redis stream poll error: Redis command timed out
+2026-10-07 09:36:23 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:24 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:24 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:24 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:24 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:24 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:24 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:23 - Failed to publish event evt_7TjMkanIum to Redis stream clicks:stream: Redis command timed out
+2026-10-07 09:36:24 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+2026-10-07 09:36:24 - [CACHE FALLBACK] Redis GET failed for key 'bench_warm_1': Redis command timed out. Transparent fallback to database.
+

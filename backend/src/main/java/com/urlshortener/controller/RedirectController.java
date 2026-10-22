@@ -87,9 +87,6 @@ public class RedirectController {
         // Non-blocking publish to async ingestion channel
         clickEventChannel.publish(clickEvent);
         
-        // Background legacy click logger
-        clickService.logClick(url.getId(), userAgent, referrer, clientIp);
-        
         // Return 302 redirect immediately with normalized absolute URL
         String destination = url.getOriginalUrl();
         if (destination != null) {

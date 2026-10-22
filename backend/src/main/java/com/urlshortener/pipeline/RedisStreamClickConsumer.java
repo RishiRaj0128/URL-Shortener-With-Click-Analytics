@@ -125,11 +125,23 @@ public class RedisStreamClickConsumer implements Runnable {
 
     public void initConsumerGroup() {
         try {
-            redisTemplate.opsForStream().createGroup(streamKey, ReadOffset.from("0"), groupName);
-            log.info("Created consumer group '{}' on stream '{}'", groupName, streamKey);
+            redisTemplate.execute((org.springframework.data.redis.core.RedisCallback<Void>) connection -> {
+                try {
+                    connection.streamCommands().xGroupCreate(
+                        streamKey.getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                        groupName,
+                        ReadOffset.from("0"),
+                        true
+                    );
+                    log.info("Initialized consumer group '{}' on stream '{}' with MKSTREAM", groupName, streamKey);
+                } catch (Exception e) {
+                    // Group already exists (BUSYGROUP)
+                    log.debug("Consumer group '{}' already exists: {}", groupName, e.getMessage());
+                }
+                return null;
+            });
         } catch (Exception e) {
-            // Normal on restarts if group already exists (BUSYGROUP)
-            log.debug("Consumer group '{}' already exists or stream initialized: {}", groupName, e.getMessage());
+            log.debug("Consumer group initialization deferred: {}", e.getMessage());
         }
     }
 
@@ -151,7 +163,7 @@ public class RedisStreamClickConsumer implements Runnable {
             try {
                 int count = pollAndProcess();
                 if (count == 0) {
-                    Thread.sleep(25);
+                    Thread.sleep(100);
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -217,8 +229,16 @@ public class RedisStreamClickConsumer implements Runnable {
             if (simulateCrashMidBatch) {
                 throw new RuntimeException(e);
             }
-            log.error("Redis stream poll error: {}", e.getMessage());
-            Thread.sleep(100);
+            String msg = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
+            Throwable cause = e.getCause();
+            if (cause != null && cause.getMessage() != null) {
+                msg = msg + " (Cause: " + cause.getMessage() + ")";
+            }
+            String msgLower = msg.toLowerCase();
+            if (msgLower.contains("nogroup") || msgLower.contains("no such key") || msgLower.contains("err") || msgLower.contains("execution")) {
+                initConsumerGroup();
+            }
+            Thread.sleep(500);
             return 0;
         }
     }

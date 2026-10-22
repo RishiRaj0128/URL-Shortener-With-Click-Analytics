@@ -43,6 +43,6 @@ EXPOSE 8080
 
 # Production container healthcheck against Spring Boot Actuator
 HEALTHCHECK --interval=20s --timeout=4s --start-period=30s --retries=3 \
-  CMD curl -f http://localhost:8080/actuator/health || exit 1
+  CMD sh -c 'curl -f http://localhost:${SERVER_PORT:-8080}/actuator/health || exit 1'
 
 ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar app.jar"]

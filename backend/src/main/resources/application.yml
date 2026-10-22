@@ -33,16 +33,16 @@ spring:
     host: ${REDIS_HOST:localhost}
     port: ${REDIS_PORT:6379}
     password: ${REDIS_PASSWORD:}
-    timeout: 50ms
+    timeout: ${REDIS_TIMEOUT:2000ms}
 
   data:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
-      timeout: 50ms
+      timeout: ${REDIS_TIMEOUT:2000ms}
       lettuce:
-        shutdown-timeout: 100ms
+        shutdown-timeout: 200ms
 
   cache:
     type: redis

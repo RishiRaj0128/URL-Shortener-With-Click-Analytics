@@ -50,10 +50,16 @@ public class RedisStreamClickChannel implements ClickEventChannel {
             @Value("${app.queue.stream-key:clicks:stream}") String streamKey,
             @Value("${app.queue.max-stream-length:50000}") long maxStreamLength,
             @Value("${app.queue.publisher-threads:4}") int publisherThreads,
-            @Value("${app.queue.publisher-buffer-capacity:10000}") int bufferCapacity) {
+            @Value("${app.queue.publisher-buffer-capacity:10000}") int bufferCapacity,
+            @Autowired(required = false) io.micrometer.core.instrument.MeterRegistry meterRegistry) {
         this.redisTemplate = redisTemplate;
         this.streamKey = streamKey;
         this.maxStreamLength = maxStreamLength;
+
+        if (meterRegistry != null) {
+            meterRegistry.gauge("click.events.dropped", droppedCount);
+            meterRegistry.gauge("click.events.published", publishedCount);
+        }
 
         // Bounded thread pool: reject policy increments drop counter to protect HTTP threads
         this.asyncPublisher = new ThreadPoolExecutor(
@@ -78,10 +84,22 @@ public class RedisStreamClickChannel implements ClickEventChannel {
     }
 
     /**
+     * Test/mock constructor for unit testing with custom capacity.
+     */
+    public RedisStreamClickChannel(
+            StringRedisTemplate redisTemplate,
+            String streamKey,
+            long maxStreamLength,
+            int publisherThreads,
+            int bufferCapacity) {
+        this(redisTemplate, streamKey, maxStreamLength, publisherThreads, bufferCapacity, null);
+    }
+
+    /**
      * Test/mock constructor for unit testing.
      */
     public RedisStreamClickChannel(StringRedisTemplate redisTemplate, String streamKey, long maxStreamLength) {
-        this(redisTemplate, streamKey, maxStreamLength, 2, 1000);
+        this(redisTemplate, streamKey, maxStreamLength, 2, 1000, null);
     }
 
     @Override

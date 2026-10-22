@@ -49,4 +49,20 @@ class IpHashUtilTest {
     void testHashIpEmpty() {
         assertNull(IpHashUtil.hashIp(""));
     }
+
+    @Test
+    void testHmacSha256WithRotatableSalt() {
+        String ip = "192.168.1.1";
+        String secret = "secret-key-min-256-bits-entropy-test-verification";
+        String saltV1 = "salt-v1";
+        String saltV2 = "salt-v2";
+
+        String hashV1 = IpHashUtil.hashIp(ip, secret, saltV1);
+        String hashV2 = IpHashUtil.hashIp(ip, secret, saltV2);
+
+        assertNotNull(hashV1);
+        assertNotNull(hashV2);
+        assertEquals(64, hashV1.length(), "HMAC-SHA256 digest must be 64 hex characters");
+        assertNotEquals(hashV1, hashV2, "Rotating salt must change the computed IP hash");
+    }
 }

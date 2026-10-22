@@ -59,8 +59,9 @@ public class AnomalyDetector {
     private final ClickAnomalyLogRepository anomalyLogRepository;
     private final com.urlshortener.anomaly.ClickFeatureExtractor featureExtractor;
     private final com.urlshortener.anomaly.ExplainableAnomalyClassifier explainableClassifier;
+    private final org.springframework.data.redis.core.StringRedisTemplate redisTemplate;
 
-    // Sliding window of timestamps per "ipHash:shortCode"
+    // Sliding window of timestamps per "ipHash:shortCode" (local fallback)
     private final Map<String, Deque<Long>> velocityTracker = new ConcurrentHashMap<>();
 
     // Historical clean window counts per shortCode for robust Z-score
@@ -70,17 +71,26 @@ public class AnomalyDetector {
     private final Map<String, AtomicInteger> consecutiveElevatedTracker = new ConcurrentHashMap<>();
 
     public AnomalyDetector(ClickAnomalyLogRepository anomalyLogRepository) {
-        this(anomalyLogRepository, new com.urlshortener.anomaly.ClickFeatureExtractor(), new com.urlshortener.anomaly.ExplainableAnomalyClassifier());
+        this(anomalyLogRepository, new com.urlshortener.anomaly.ClickFeatureExtractor(), new com.urlshortener.anomaly.ExplainableAnomalyClassifier(), null);
+    }
+
+    public AnomalyDetector(
+            ClickAnomalyLogRepository anomalyLogRepository,
+            com.urlshortener.anomaly.ClickFeatureExtractor featureExtractor,
+            com.urlshortener.anomaly.ExplainableAnomalyClassifier explainableClassifier) {
+        this(anomalyLogRepository, featureExtractor, explainableClassifier, null);
     }
 
     @org.springframework.beans.factory.annotation.Autowired
     public AnomalyDetector(
             ClickAnomalyLogRepository anomalyLogRepository,
-            com.urlshortener.anomaly.ClickFeatureExtractor featureExtractor,
-            com.urlshortener.anomaly.ExplainableAnomalyClassifier explainableClassifier) {
+            @org.springframework.beans.factory.annotation.Autowired(required = false) com.urlshortener.anomaly.ClickFeatureExtractor featureExtractor,
+            @org.springframework.beans.factory.annotation.Autowired(required = false) com.urlshortener.anomaly.ExplainableAnomalyClassifier explainableClassifier,
+            @org.springframework.beans.factory.annotation.Autowired(required = false) org.springframework.data.redis.core.StringRedisTemplate redisTemplate) {
         this.anomalyLogRepository = anomalyLogRepository;
         this.featureExtractor = featureExtractor != null ? featureExtractor : new com.urlshortener.anomaly.ClickFeatureExtractor();
         this.explainableClassifier = explainableClassifier != null ? explainableClassifier : new com.urlshortener.anomaly.ExplainableAnomalyClassifier();
+        this.redisTemplate = redisTemplate;
     }
 
     public com.urlshortener.anomaly.ClickFeatureExtractor getFeatureExtractor() {
@@ -120,17 +130,23 @@ public class AnomalyDetector {
         long nowMillis = System.currentTimeMillis();
         long windowStartMillis = nowMillis - (velocityWindowSeconds * 1000L);
 
-        Deque<Long> timestamps = velocityTracker.computeIfAbsent(
-            trackerKey,
-            k -> new ConcurrentLinkedDeque<>()
-        );
-
-        while (!timestamps.isEmpty() && timestamps.peekFirst() < windowStartMillis) {
-            timestamps.pollFirst();
+        int currentVelocity;
+        if (redisTemplate != null) {
+            try {
+                String redisKey = "velocity:" + trackerKey;
+                String uniqueMember = nowMillis + ":" + UUID.randomUUID().toString().substring(0, 8);
+                redisTemplate.opsForZSet().removeRangeByScore(redisKey, 0, (double) windowStartMillis);
+                redisTemplate.opsForZSet().add(redisKey, uniqueMember, (double) nowMillis);
+                Long size = redisTemplate.opsForZSet().size(redisKey);
+                redisTemplate.expire(redisKey, java.time.Duration.ofSeconds(velocityWindowSeconds * 2L));
+                currentVelocity = (size != null) ? size.intValue() : 1;
+            } catch (Exception e) {
+                log.warn("Redis velocity check failed, falling back to local deque: {}", e.getMessage());
+                currentVelocity = evaluateLocalVelocity(trackerKey, nowMillis, windowStartMillis);
+            }
+        } else {
+            currentVelocity = evaluateLocalVelocity(trackerKey, nowMillis, windowStartMillis);
         }
-
-        timestamps.addLast(nowMillis);
-        int currentVelocity = timestamps.size();
 
         if (currentVelocity > velocityMaxRequests) {
             String details = String.format(
@@ -157,6 +173,20 @@ public class AnomalyDetector {
         }
 
         return new AnomalyResult(false, null, null, 0.0);
+    }
+
+    private int evaluateLocalVelocity(String trackerKey, long nowMillis, long windowStartMillis) {
+        Deque<Long> timestamps = velocityTracker.computeIfAbsent(
+            trackerKey,
+            k -> new ConcurrentLinkedDeque<>()
+        );
+
+        while (!timestamps.isEmpty() && timestamps.peekFirst() < windowStartMillis) {
+            timestamps.pollFirst();
+        }
+
+        timestamps.addLast(nowMillis);
+        return timestamps.size();
     }
 
     /**

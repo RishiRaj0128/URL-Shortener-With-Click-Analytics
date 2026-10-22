@@ -40,12 +40,55 @@ This document tracks all changes made per phase, assumptions adopted, and remain
 
 ---
 
+## Phase 2: Correctness Across Multiple Instances (`feature/phase-2-multi-instance-correctness`)
+
+### PR Summary: Multi-Instance Rate Limiting, Shared Anomaly State, Click Channel Drop Metrics, and HMAC-SHA256 IP Privacy
+
+#### 1. Distributed Rate Limiting via Redis Token Bucket Lua Script
+- **Problem**: In-memory `ConcurrentHashMap` with Bucket4j isolated rate-limiting tokens per container/pod. In a multi-node cluster, a user sending requests round-robined across $N$ instances received $N \times$ their rate limit allocation.
+- **Resolution**:
+  - Implemented an atomic Redis Lua token bucket script in [`RateLimitingService.java`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/main/java/com/urlshortener/service/RateLimitingService.java).
+  - The script models a continuous greedy refill token bucket with key TTL auto-expiration (120 seconds), tracking `tokens` and `last_refill_timestamp` per bucket key.
+  - Automatically falls back to in-memory Bucket4j if Redis is disconnected or unavailable, preserving local protection without throwing 500 errors.
+
+#### 2. Shared Cluster Anomaly Detection State
+- **Problem**: Per-instance `ArrayDeque` in `AnomalyDetector` allowed bot burst velocity attacks to evade detection when requests were split across multiple backend nodes (split-burst anomaly evasion).
+- **Resolution**:
+  - Upgraded [`AnomalyDetector.java`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/main/java/com/urlshortener/service/AnomalyDetector.java) to track sliding-window request timestamps using a shared Redis Sorted Set (`ZADD`, `ZREMRANGEBYSCORE`, `ZCARD`) keyed by `anomaly:burst:{shortCode}:{ipHash}`.
+  - Sets a 60-second key TTL so stale burst keys are purged automatically.
+  - Automatically falls back to local in-memory sliding window deque if Redis is not active.
+
+#### 3. HMAC-SHA256 IP Hashing with Rotatable Salt
+- **Problem**: Previously used plain SHA-256 (`MessageDigest.getInstance("SHA-256")`). Because the IPv4 address space is small ($2^{32} \approx 4.29 \times 10^9$), unsalted or statically salted SHA-256 hashes are easily reversed via precomputed rainbow tables, violating GDPR/privacy standards.
+- **Resolution**:
+  - Refactored [`IpHashUtil.java`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/main/java/com/urlshortener/util/IpHashUtil.java) to use `HmacSHA256` keyed with a configurable secret (`app.security.ip-hash-secret` / `IP_HASH_SECRET`).
+  - Added support for rotatable date/epoch salts (`app.security.ip-hash-salt` / `IP_HASH_SALT`), allowing automated salt rotation to protect historical IP hashes.
+  - Updated all unit tests in [`IpHashUtilTest.java`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/test/java/com/urlshortener/util/IpHashUtilTest.java).
+
+#### 4. Click Pipeline Durability & Metric Gauges
+- **Problem**: When the Redis Stream click ingestion channel or fallback executor is saturated, dropped events were logged but not exposed to Prometheus/Micrometer.
+- **Resolution**:
+  - Added Micrometer metric gauges (`click.events.dropped`, `click.events.published`) in [`RedisStreamClickChannel.java`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/main/java/com/urlshortener/pipeline/RedisStreamClickChannel.java).
+  - Maintained backward-compatible constructor for standalone/mocked testing.
+
+#### 5. Verification Suite
+- Added [`MultiInstanceCorrectnessTest.java`](file:///d:/URL%20Shortener%20with%20Click%20Analytics/backend/src/test/java/com/urlshortener/service/MultiInstanceCorrectnessTest.java) explicitly simulating multi-node deployments:
+  - Tested distributed rate limiting across simulated nodes sharing a single Redis backend.
+  - Tested split-burst anomaly evasion detection where 11 requests split 6 + 5 across Node A and Node B trigger a `BOT_BURST_VELOCITY` anomaly breach on the shared Redis state.
+  - Tested HMAC-SHA256 cryptographic separation with distinct secrets and salts.
+
+### Assumptions Made in Phase 2
+1. **Redis Availability**: Redis is the shared coordination layer in production for distributed rate limiting and anomaly burst tracking. In-memory fallbacks ensure service continuity during Redis degradation or local non-Docker development.
+2. **IP Hash Privacy**: HMAC-SHA256 with key/salt rotation satisfies GDPR compliance for anonymized traffic analytics.
+
+---
+
 ## Remaining Phases (Pending Approval)
 
-- **Phase 2**: Correctness across multiple instances (Redis-backed Bucket4j distributed rate limiter, shared anomaly detection state, click pipeline durability & drop metrics, HMAC-SHA256 IP hashing with rotatable salt).
 - **Phase 3**: Product basics & security (SSRF prevention, private/loopback IP blocking, protocol restrictions, max URL length, link expiration/TTL, custom aliases, soft delete, mandatory non-default JWT secret validation).
 - **Phase 4**: Scope cleanup (Repurpose `BanditRouter` to multi-destination A/B link optimization, eliminate banking references, relocate EWMA node scoring to experiments, soften sensationalist wording).
 - **Phase 5**: Observability (Micrometer Prometheus meters, provisioned Grafana dashboard in `docker-compose.yml`, alert rules, OpenTelemetry distributed tracing).
 - **Phase 6**: Testing & CI (Testcontainers PostgreSQL/Redis integration suite, unit tests for anomaly math and Thompson sampling, GitHub Actions with Trivy, CodeQL, and Dependabot).
 - **Phase 7**: Deployment & IaC (Multi-stage non-root Dockerfile, Terraform AWS infrastructure, GitHub Actions deploy workflow with OIDC, `docs/DEPLOY.md`).
 - **Phase 8**: Documentation & Portfolio Integrity (`RESUME_FACTS.md`, architecture ADRs, verified `INCIDENTS.md`).
+

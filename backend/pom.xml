@@ -23,7 +23,7 @@
         <java.version>25</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <zxing.version>3.5.3</zxing.version>
-        <bucket4j.version>7.6.0</bucket4j.version>
+        <bucket4j.version>8.0.1</bucket4j.version>
         <jjwt.version>0.12.3</jjwt.version>
     </properties>
 

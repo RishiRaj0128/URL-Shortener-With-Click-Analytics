@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
     @Index(name = "idx_urls_expires_at", columnList = "expires_at"),
     @Index(name = "idx_urls_is_deleted", columnList = "is_deleted")
 })
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 public class Url {
 
   @Id
@@ -133,6 +134,7 @@ public class Url {
     this.deletedAt = deletedAt;
   }
 
+  @com.fasterxml.jackson.annotation.JsonIgnore
   public boolean isExpired() {
     return expiresAt != null && LocalDateTime.now().isAfter(expiresAt);
   }

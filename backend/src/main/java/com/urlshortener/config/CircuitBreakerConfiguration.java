@@ -35,11 +35,12 @@ public class CircuitBreakerConfiguration {
     public CircuitBreakerRegistry circuitBreakerRegistry() {
         CircuitBreakerConfig defaultConfig = CircuitBreakerConfig.custom()
             .failureRateThreshold(50.0f)
-            .slowCallRateThreshold(50.0f)
-            .slowCallDurationThreshold(Duration.ofMillis(200))
+            .slowCallRateThreshold(70.0f)
+            .slowCallDurationThreshold(Duration.ofMillis(600))
             .waitDurationInOpenState(Duration.ofSeconds(5))
-            .permittedNumberOfCallsInHalfOpenState(3)
-            .slidingWindowSize(10)
+            .permittedNumberOfCallsInHalfOpenState(5)
+            .slidingWindowSize(30)
+            .minimumNumberOfCalls(20)
             .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
             .build();
 

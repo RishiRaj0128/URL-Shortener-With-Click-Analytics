@@ -59,7 +59,7 @@ jobs:
         run: |
           aws ecs describe-task-definition \
             --task-definition url-shortener-task \
-            --query taskDefinition > task-definition.json
+            --query taskDefinition > task-definition.json || cp ${{ env.ECS_TASK_DEFINITION }} task-definition.json
 
       - name: Fill New Image in ECS Task Definition
         id: task-def

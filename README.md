@@ -4,7 +4,7 @@ A hardened, production-grade URL shortening and traffic intelligence platform bu
 
 [![CI Pipeline](https://github.com/RishiRaj0128/URL-Shortener-With-Click-Analytics/actions/workflows/ci.yml/badge.svg)](.github/workflows/ci.yml)
 [![Verification Suite](https://img.shields.io/badge/Unit%20%26%20Integration%20Tests-157%20Passing-brightgreen)](backend/)
-[![Verified Resume Facts](https://img.shields.io/badge/Resume%20Facts-100%25%20Verifiable-blue)](RESUME_FACTS.md)
+[![Incidents & Chaos Drills](https://img.shields.io/badge/Incidents%20%26%20Chaos-Documented-orange)](INCIDENTS.md)
 
 ---
 
@@ -99,7 +99,7 @@ sequenceDiagram
 
 | Component | Technology | Rationale / Performance Specification |
 | :--- | :--- | :--- |
-| **Runtime** | Java 25 (LTS) / Spring Boot 3.3 | Virtual thread & container cgroup memory management |
+| **Runtime** | Java 25 (LTS) / Spring Boot 4.1.0 | Virtual thread & container cgroup memory management |
 | **Persistence** | PostgreSQL 15 (AWS RDS Multi-AZ) | ACID persistence, hourly time-bucketed rollups (`click_rollups`) |
 | **Cache & Event Bus** | Redis 7 (ElastiCache) | L2 cache-aside + Redis Stream at-least-once consumer group |
 | **ID Generation** | Twitter Snowflake (64-bit) | 1,024 worker nodes, 4,096 IDs/ms per node, Base62 encoded |
@@ -114,10 +114,8 @@ sequenceDiagram
 ## Verification & Project Artifacts
 
 Every claim in this repository is accompanied by concrete, reproducible evidence:
-- **[RESUME_FACTS.md](RESUME_FACTS.md)**: Curated list of resume-ready bullet points backed by code paths and benchmark artifacts.
-- **[AUDIT.md](AUDIT.md)**: Formal code audit detailing verified vs unverified architectural claims.
-- **[CHANGES.md](CHANGES.md)**: PR-style incremental change log for Phases 1 through 8.
 - **[INCIDENTS.md](INCIDENTS.md)**: Production-style post-mortem incident logs for simulated failures (Redis socket timeout, consumer crash, bot bursts).
+- **[CHANGES.md](CHANGES.md)**: PR-style incremental change log for Phases 1 through 8.
 - **[docs/SECURITY.md](docs/SECURITY.md)**: Security policy, SSRF threat model, and cryptographic IP pseudonymization specs.
 - **[docs/DEPLOY.md](docs/DEPLOY.md)**: Complete deployment runbook and Terraform AWS provisioning guide.
 - **[docs/adr/](docs/adr/)**: Architectural Decision Records (Snowflake IDs, Redis Streams, Thompson Sampling, SSRF).

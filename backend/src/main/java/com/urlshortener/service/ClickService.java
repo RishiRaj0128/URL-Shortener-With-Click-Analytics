@@ -31,8 +31,8 @@ import java.util.stream.Collectors;
  * - Provide analytics queries
  * 
  * Async Strategy:
- * - logClick() is @Async to avoid blocking redirect response
- * - Geolocation lookup happens in background
+ * - Redirect fast path is decoupled via RedisStreamClickChannel
+ * - Geolocation and user-agent analytics processed asynchronously
  * - Database inserts happen after response is sent
  */
 @Service
@@ -59,13 +59,13 @@ public class ClickService {
     }
     
     /**
-     * Log a click for a shortened URL.
-     * This method is asynchronous and non-blocking.
+     * Legacy click logger replaced by decoupled RedisStreamClickChannel ingestion.
+     * Retained solely for backwards compatibility verification; redirect fast-path
+     * dispatches directly to Redis Streams instead.
      * 
-     * @param urlId The ID of the shortened URL
-     * @param request HTTP request containing User-Agent and IP
+     * @deprecated Replaced by RedisStreamClickChannel decoupled ingestion pipeline.
      */
-    @Async("taskExecutor")
+    @Deprecated
     public void logClick(Long urlId, String userAgent, String referrer, String clientIp) {
         try {
             Url url = urlRepository.findById(urlId)

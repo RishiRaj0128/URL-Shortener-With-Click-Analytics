@@ -30,10 +30,14 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.utility.DockerImageName;
+
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Track 0.1 (Integration/Regression): Cold Start, FLUSHALL Re-init, and Fault Recovery")
 class RedisStreamColdStartAndFaultRecoveryIT {
 
+    private static GenericContainer<?> testcontainersRedis;
     private LettuceConnectionFactory connectionFactory;
     private StringRedisTemplate redisTemplate;
     private SimpleMeterRegistry meterRegistry;
@@ -47,22 +51,43 @@ class RedisStreamColdStartAndFaultRecoveryIT {
 
     @BeforeEach
     void setUp() {
-        boolean redisAvailable = false;
+        String host = "localhost";
+        int port = 6379;
+
+        // Try local Redis first; if unreachable, spin up real Redis via Testcontainers
+        boolean localRedisUp = false;
         try {
-            RedisStandaloneConfiguration config = new RedisStandaloneConfiguration("localhost", 6379);
+            RedisStandaloneConfiguration config = new RedisStandaloneConfiguration(host, port);
             LettuceClientConfiguration clientConfig = LettuceClientConfiguration.builder()
-                .commandTimeout(Duration.ofMillis(2000))
+                .commandTimeout(Duration.ofMillis(1000))
                 .build();
-            connectionFactory = new LettuceConnectionFactory(config, clientConfig);
-            connectionFactory.afterPropertiesSet();
-            redisTemplate = new StringRedisTemplate(connectionFactory);
-            String ping = redisTemplate.getConnectionFactory().getConnection().ping();
-            redisAvailable = "PONG".equalsIgnoreCase(ping);
+            LettuceConnectionFactory testFactory = new LettuceConnectionFactory(config, clientConfig);
+            testFactory.afterPropertiesSet();
+            StringRedisTemplate probe = new StringRedisTemplate(testFactory);
+            String ping = probe.getConnectionFactory().getConnection().ping();
+            localRedisUp = "PONG".equalsIgnoreCase(ping);
+            testFactory.destroy();
         } catch (Exception e) {
-            redisAvailable = false;
+            localRedisUp = false;
         }
 
-        assumeTrue(redisAvailable, "Real Redis must be available on localhost:6379 to execute integration drills");
+        if (!localRedisUp) {
+            if (testcontainersRedis == null || !testcontainersRedis.isRunning()) {
+                testcontainersRedis = new GenericContainer<>(DockerImageName.parse("redis:7-alpine"))
+                    .withExposedPorts(6379);
+                testcontainersRedis.start();
+            }
+            host = testcontainersRedis.getHost();
+            port = testcontainersRedis.getMappedPort(6379);
+        }
+
+        RedisStandaloneConfiguration config = new RedisStandaloneConfiguration(host, port);
+        LettuceClientConfiguration clientConfig = LettuceClientConfiguration.builder()
+            .commandTimeout(Duration.ofMillis(2000))
+            .build();
+        connectionFactory = new LettuceConnectionFactory(config, clientConfig);
+        connectionFactory.afterPropertiesSet();
+        redisTemplate = new StringRedisTemplate(connectionFactory);
 
         testStreamKey = "test:stream:" + UUID.randomUUID();
         testGroupName = "test:group:" + UUID.randomUUID();
@@ -87,6 +112,13 @@ class RedisStreamColdStartAndFaultRecoveryIT {
         }
         if (connectionFactory != null) {
             connectionFactory.destroy();
+        }
+    }
+
+    @org.junit.jupiter.api.AfterAll
+    static void tearDownContainer() {
+        if (testcontainersRedis != null && testcontainersRedis.isRunning()) {
+            testcontainersRedis.stop();
         }
     }
 

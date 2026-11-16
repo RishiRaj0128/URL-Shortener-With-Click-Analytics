@@ -67,7 +67,9 @@ public class TraceContextFilter implements Filter {
             return customTraceId.trim();
         }
 
-        // 3. Generate 32-character hex trace ID
-        return UUID.randomUUID().toString().replace("-", "");
+        // 3. Generate 32-character hex trace ID via lock-free ThreadLocalRandom
+        long high = java.util.concurrent.ThreadLocalRandom.current().nextLong();
+        long low = java.util.concurrent.ThreadLocalRandom.current().nextLong();
+        return String.format("%016x%016x", high, low);
     }
 }

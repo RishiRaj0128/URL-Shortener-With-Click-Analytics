@@ -3,7 +3,7 @@
 The high-throughput, hardened Spring Boot core service for the **URL Shortener with Click Analytics & Traffic Intelligence** platform.
 
 [![Verification Suite](https://img.shields.io/badge/Unit%20%26%20Integration%20Tests-157%20Passing-brightgreen)](src/test/java)
-[![Resume Facts](https://img.shields.io/badge/Resume%20Facts-100%25%20Verifiable-blue)](../RESUME_FACTS.md)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.0-brightgreen)](pom.xml)
 
 ---
 
@@ -66,13 +66,13 @@ POST /api/shorten
 
 ### Backend
 
-- **Java 17+**: Modern Java with records, sealed classes, pattern matching
-- **Spring Boot 3.3**: Latest LTS version
+- **Java 25**: Modern LTS Java with virtual threads, pattern matching, cgroup support
+- **Spring Boot 4.1.0**: Core backend framework
   - Spring Web (REST controllers)
   - Spring Data JPA (ORM)
   - Spring Security (JWT authentication)
   - Spring Cache (Redis integration)
-  - Spring Async (non-blocking click logging)
+  - Spring Data Redis & Redis Streams (asynchronous decoupled click ingestion)
 - **PostgreSQL**: Relational database
   - Flyway: Versioned schema migrations
   - Proper indexing for analytics queries

@@ -65,6 +65,7 @@ public class SecurityConfiguration {
         .authorizeHttpRequests(authz -> authz
             // Public endpoints (no auth required)
             .requestMatchers(HttpMethod.GET, "/*", "/{shortCode}").permitAll()
+            .requestMatchers(HttpMethod.HEAD, "/*", "/{shortCode}").permitAll()
             .requestMatchers(HttpMethod.POST, "/api/auth/signup").permitAll()
             .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
             .requestMatchers("/api/health/**").permitAll()

@@ -1,6 +1,6 @@
 # ==========================================
 # Multi-Stage Dockerfile for URL Shortener
-# Java 25 / Spring Boot 3.3 Parent
+# Java 25 / Spring Boot 4.1.0 Parent
 # ==========================================
 
 # Stage: Minimal & Hardened Runtime

@@ -26,6 +26,8 @@ resource "aws_elasticache_replication_group" "redis" {
   multi_az_enabled           = true
   at_rest_encryption_enabled = true
   transit_encryption_enabled = false
+  snapshot_retention_limit   = 5
+  snapshot_window            = "03:00-05:00"
 
   tags = {
     Name = "${var.app_name}-redis"

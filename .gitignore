@@ -58,3 +58,7 @@ Thumbs.db
 .vscode/*
 !.vscode/settings.json
 !.vscode/extensions.json
+
+# Private Fact Sheets & Interview Prep
+PROJECT_FACTS.md
+
